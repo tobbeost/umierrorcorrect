@@ -14,7 +14,7 @@ def get_consensus(bamfilename,umis):
 
 
 def main(bamfilename):
-    with open('umi.pickle','rb') as f:
+    with open('/home/xsteto/tmp/umierrorcorrect/umi.pickle','rb') as f:
         umis=pickle.load(f)
     get_consensus(bamfilename,umis)
 

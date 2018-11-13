@@ -9,13 +9,15 @@ def trim_barcode(sequence, barcode_length, spacer_length):
     return((barcode,rest))
 
 def preprocess(infilename,outfilename):
+    barcode_length=12
+    spacer_length=13
     with gzip.open(infilename,'rb') as f, gzip.open(outfilename,'wb') as g:
         for name,seq,qualname,qual in read_fastq(f):
             #print (name,seq)
-            barcode,rest=trim_barcode(seq,12,13)
+            barcode,rest=trim_barcode(seq, barcode_length, spacer_length)
             #g.write(name+':'+barcode+'\n'+rest+'\n'+qualname+'\n'+qual[12+11:]+'\n')
             newname=b':'.join([name,barcode])
-            g.write(b'\n'.join([newname,rest,qualname,qual[12+11:]])+b'\n')
+            g.write(b'\n'.join([newname,rest,qualname,qual[barcode_length+spacer_length:]])+b'\n')
 
 if __name__=='__main__':
     preprocess(sys.argv[1],sys.argv[2])
