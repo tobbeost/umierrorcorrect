@@ -4,6 +4,7 @@ import sys
 import pickle
 import pysam
 from testgroup3 import umi_cluster
+from collections import Counter
 
 def get_consensus(bamfilename,umis,family_sizes):
     consensus_sequence={}
@@ -11,7 +12,7 @@ def get_consensus(bamfilename,umis,family_sizes):
         consensus_sequence[fs]={}
     position_matrix={}
     with pysam.AlignmentFile(bamfilename,'rb') as f:
-        alignment=f.pileup('17',7577497,7577615,max_depth=1000000)
+        alignment=f.pileup('17',7577497,7577600,max_depth=1000000)
         n=0
         clustlist=['GCACCCGCGCCC','GCACCCGCGCAC','GCACCCGGGCCC']
         for pileupcolumn in alignment:
