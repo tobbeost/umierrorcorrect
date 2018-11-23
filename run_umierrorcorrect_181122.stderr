@@ -11,3 +11,7 @@ cp: cannot stat ‘/tmp/tobiastmp/outtest5’: No such file or directory
 mkdir: cannot create directory ‘/tmp/tobiastmp/’: File exists
 2018-11-22 09:26:10 Starting UMI Error Correct
 2018-11-22 09:26:10 Writing output files to /tmp/tobiastmp/outtest5
+
+real	101m38.693s
+user	101m32.697s
+sys	0m5.539s

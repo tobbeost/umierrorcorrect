@@ -25,17 +25,17 @@ def get_consensus_bam(position_matrix,fasta,freq_threshold):
                 break
     return(consensusseq)
 
-def get_cigar_string(cons,ref):
-    cons_sequence=''.join(cons.values())
-    if 'D' in cons_sequence or 'I' in cons_sequence:
-
-    else:
-        if cons_sequence==ref:
-            return('{}M'.format(len(cons)))
-        else:
-        q
+#def get_cigar_string(cons,ref):
+#    cons_sequence=''.join(cons.values())
+#    if 'D' in cons_sequence or 'I' in cons_sequence:
+#
+#    else:
+#        if cons_sequence==ref:
+#            return('{}M'.format(len(cons)))
+#        else:
+#        q
         
-def get_consensus(bamfilename,umis,family_sizes,fasta):
+def get_consensus(bamfilename,umis,family_sizes,ref_seq):
     consensus_sequence={}
     for fs in family_sizes:
         consensus_sequence[fs]={}
@@ -46,7 +46,8 @@ def get_consensus(bamfilename,umis,family_sizes,fasta):
         clustlist=['GCACCCGCGCCC','GCACCCGCGCAC','GCACCCGGGCCC']
         for pileupcolumn in alignment:
             pos=pileupcolumn.pos
-            #print(pos)
+            ref_base=ref_seq[pos-7577497]
+            print(pos)
             for read in pileupcolumn.pileups:
                 barcode=read.alignment.qname.split(':')[-1]
                 if barcode in clustlist and pos==7577513:
@@ -55,24 +56,26 @@ def get_consensus(bamfilename,umis,family_sizes,fasta):
                 cluster_size=umis[barcode].count
                     
                 if not read.is_del and not read.indel:
-                    allele=read.alignment.query_sequence[read.query_position]
+                    al=read.alignment.query_sequence[read.query_position]
                     #if cluster in 'GCACCCGCGCCC' and pos==7577497:
                     #    print(allele)
                     #    n+=1
                 elif read.indel>0: #insertion
-                    allele='I'
+                    #print(read.indel)
+                    al=read.alignment.query_sequence[read.query_position:read.query_position+abs(read.indel)+1]
                 elif read.indel<0: #deletion
-                    allele='D'
+                    print(read.indel)
+                    al=read.alignment.query_sequence[read.query_position+1]
+                    ref_base=ref_seq[(pos-7577497):(pos-7577497)+abs(read.indel)]
                 if cluster not in position_matrix:
                     position_matrix[cluster]={}
                 if pos not in position_matrix[cluster]:
                     position_matrix[cluster][pos]={}
+                allele=(ref_base,al)
                 if allele not in position_matrix[cluster][pos]:
                     position_matrix[cluster][pos][allele]=0
                 position_matrix[cluster][pos][allele]+=1
     print(n)
-    ref=get_reference_sequence(fasta,'17',7577497,7577600)
-    print(ref)
     return(position_matrix)
 
 
@@ -82,9 +85,9 @@ def main(bamfilename):
         umis=pickle.load(f)
     family_sizes=[0,1,2,3,4,5,7,10,20,30]
     fasta=pysam.FastaFile('/medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta')
-    
+    ref_seq=get_reference_sequence(fasta,'17',7577497,7577800)
 
-    position_matrix=get_consensus(bamfilename,umis,family_sizes,fasta)
+    position_matrix=get_consensus(bamfilename,umis,family_sizes,ref_seq)
     print(position_matrix['GCACCCGCGCCC'])
     print(len(position_matrix))
     fasta.close()
