@@ -169,14 +169,14 @@ def get_consensus(bamfilename,umis,family_sizes,ref_seq):
                             n+=1
                     elif read.indel>0: #insertion
                         #print(read.indel)
-                        al='I'
+                        al='I'+read.alignment.query_sequence[read.query_position:read.query_position+abs(read.indel)+1]
                         q=get_phred(read.alignment.qual[read.query_position])
                         #al=read.alignment.query_sequence[read.query_position:read.query_position+abs(read.indel)+1]
                     elif read.indel<0: #deletion
                         #print(read.indel)
                         #al=read.alignment.query_sequence[read.query_position+1]
                         #ref_base=ref_seq[(pos-7577497):(pos-7577497)+abs(read.indel)]
-                        al='D'
+                        al='D'+str(abs(read.indel))
                         q=get_phred(read.alignment.qual[read.query_position])
                     if cluster not in position_matrix:
                         position_matrix[cluster]={}
@@ -194,22 +194,98 @@ def get_consensus(bamfilename,umis,family_sizes,ref_seq):
     #print(n)
     return(position_matrix,singleton_matrix)
 
+def getConsensus3(group_seqs):
+    '''Takes a list of pysam entries (rows in the BAM file) as input and generates a consensus sequence.'''
+    consensus={}
+    is_indel=False
+    template_read=group_seqs[0]
+    for read in group_seqs:
+        if 'I' not in read.cigarstring and 'D' not in read.cigarstring: #no indel in read
+            sequence=read.seq
+            qual=read.qual
+            for qpos,refpos in read.get_aligned_pairs(matches_only=True):
+                base=sequence[qpos]
+                if refpos not in consensus:
+                    consensus[refpos]={}
+                if base not in consensus[refpos]:
+                    consensus[refpos][base]=[]
+                consensus[refpos][base].append(get_phred(qual[qpos]))
+        else: #indel
+            readdict=dict(read.get_aligned_pairs(matches_only=True))
+            curr_index=0
+            for typex,num_bases in read.cigar:
+                if typex==0:
+                    for i in range(curr_index,curr_index+num_bases):
+                        print(readdict[i])
+            print(read.to_string())#consensusseq={}
+            is_indel=True
+    if len(consensus)>0:
+        consread=consensus_read('17',list(consensus.keys())[0])
+        for pos in consensus:
+            cons_base,cons_qual=calc_consensus_probabilities(consensus[pos])
+            consread.add_base(cons_base,get_ascii(cons_qual))
+      
+        return(consread)
+    return(None)
 
+    #for position in consensus:
+    #    if len(consensus[position])==1: #only one option
+    #        consensusseq[position]=list(consensus[position].keys())[0]
+    #    else:
+    #        cons_allele = max(consensus[position], key = consensus[position].get)
+    #        cons_denom = sum(consensus[position].values())
+    #        cons_percent = (consensus[position][cons_allele]/sum(consensus[position].values())) * 100
+    #        if cons_percent>=freq_cutoff:
+    #            consensusseq[position]=cons_allele
+    #        else:
+    #            consensusseq=None
+    #            break
+    #return(consensusseq)
+
+def get_all_consensus(position_matrix):
+    consensuses={}
+    for umi in position_matrix:
+        consensuses[umi]=getConsensus3(position_matrix[umi])
+    return(consensuses)
+    
+
+def get_cons_dict(bamfilename,umis):
+    position_matrix={}
+    singleton_matrix={}
+    with pysam.AlignmentFile(bamfilename,'rb') as f:
+        alignment=f.fetch('17',7577497,7577600)
+        for read in alignment:
+            barcode=read.qname.split(':')[-1]
+            cluster=umis[barcode].centroid
+            cluster_size=umis[barcode].count
+            if cluster_size>1:
+                if cluster not in position_matrix:
+                    position_matrix[cluster]=[]
+                position_matrix[cluster].append(read)
+            else:
+                if cluster not in singleton_matrix:
+                    singleton_matrix[cluster]=read
+    return(position_matrix,singleton_matrix)
 
 def main(bamfilename):
     with open('/home/xsteto/umierrorcorrect/umi.pickle','rb') as f:
         umis=pickle.load(f)
-    family_sizes=[0,1,2,3,4,5,7,10,20,30]
-    fasta=pysam.FastaFile('/medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta')
-    ref_seq=get_reference_sequence(fasta,'17',7577497,7577800)
+    #family_sizes=[0,1,2,3,4,5,7,10,20,30]
+    #fasta=pysam.FastaFile('/medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta')
+    #ref_seq=get_reference_sequence(fasta,'17',7577497,7577800)
 
-    position_matrix,singleton_matrix=get_consensus(bamfilename,umis,family_sizes,ref_seq)
-    consensus_seq=get_consensus_seq2(position_matrix)
+    position_matrix,singleton_matrix=get_cons_dict(bamfilename,umis)
+    consensus_seq=get_all_consensus(position_matrix)
+    #print(seqs)
+    #consensus_seq=get_consensus_seq2(position_matrix)
     #print(position_matrix['CATGGCGAGCAT'])
     #print(umis['CATGGCGAGCCT'].count)
     #print(umis['CATGGCGAGCCT'].centroid)
     for k in consensus_seq:
-        print('@'+k+'_'+str(umis[k].count)+'_'+str(consensus_seq[k].start_pos)+'\n'+consensus_seq[k].seq+'\n+\n'+consensus_seq[k].qual)
+        if not consensus_seq[k]:
+            print(None)
+        else:
+            print('@'+k+'_'+str(umis[k].count)+'_'+str(consensus_seq[k].start_pos)+'\n'+consensus_seq[k].seq+'\n+\n'+consensus_seq[k].qual)
     #fasta.close()
     #for k in singleton_matrix:
     #    print(k, umis[k].count, singleton_matrix[k].alignment.qname)

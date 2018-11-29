@@ -44,7 +44,7 @@ def get_consensus(bamfilename,umis,family_sizes):
 
 
 def main(bamfilename):
-    with open('/home/xsteto/tmp/umierrorcorrect/umi.pickle','rb') as f:
+    with open('/home/xsteto/umierrorcorrect/umi.pickle','rb') as f:
         umis=pickle.load(f)
     family_sizes=[0,1,2,3,4,5,7,10,20,30]
     
