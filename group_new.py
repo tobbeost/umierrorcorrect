@@ -29,15 +29,20 @@ def get_chromosome_list_from_bam(f):
 
 def group_by_position(f,chrx,pos_threshold):
     regions={}
+    ends={}
     reads=f.fetch(chrx)
     current_pos=-pos_threshold
     current_end=-pos_threshold
+    #current_aend=-pos_threshold
     for line in reads:
         pos = line.pos
         if pos > current_end + pos_threshold:
             #new region
+            if pos != -pos_threshold:
+                ends[current_pos] = current_end + 1
             current_pos = pos
             current_end = pos
+            #current_aend = line.reference_end
             regions[pos]=Counter()
             barcode = line.qname.split(':')[-1]
             #if barcode not in regions[current_pos]:
@@ -49,7 +54,11 @@ def group_by_position(f,chrx,pos_threshold):
             #    regions[current_pos][barcode]=0
             regions[current_pos][barcode]+=1
             current_end=pos
-    return(regions)
+            #aend=line.reference_end
+            #if aend > current_aend:
+            #    current_aend = aend
+    ends[current_pos] = current_end + 1
+    return(regions,ends)
         #if len(regions)==0:
         #    r=Region(pos)
         #    regions.append(r)
@@ -88,8 +97,12 @@ def readBam(infile,position_threshold):
     with pysam.AlignmentFile(infile,'rb') as f:
         chrs=get_chromosome_list_from_bam(f)
         chrregions={}
+        chrends={}
         for chrx in chrs:
-            chrregions[chrx]=group_by_position(f,chrx,position_threshold)
+            regions,ends=group_by_position(f,chrx,position_threshold)
+            chrregions[chrx]=regions
+            chrends[chrx]=ends
+            #chrregions[chrx]=group_by_position(f,chrx,position_threshold)
 
         regions=remove_singleton_regions(chrregions)
         #for chrx in chrs:
@@ -100,7 +113,7 @@ def readBam(infile,position_threshold):
         #    regions2=regions[chrx]
         #    for rr in regions2:
         #        print(chrx,rr,regions2[rr].most_common(10))
-    return(regions)
+    return(regions,chrends)
 
 def read_bam_from_bed(infile,bedfile,position_threshold):
     chrregions={}
@@ -119,16 +132,16 @@ def read_bam_from_bed(infile,bedfile,position_threshold):
 
 
 def main(filename,bedfile):
-    position_threshold=20
+    position_threshold=10
     group_method='automatic'
     #group_method='fromBed'
     if group_method=='fromBed':
         regions=read_bam_from_bed(filename,bedfile,position_threshold)
     else:
-        regions=readBam(filename,position_threshold)
+        regions,chrends=readBam(filename,position_threshold)
     for chrx in regions:
         regions2=regions[chrx]
         for rr in regions2:
-            print(chrx,rr,regions2[rr].most_common(10))
+            print(chrx,rr,chrends[chrx][rr],regions2[rr].most_common(10))
 if __name__=='__main__':
     main(sys.argv[1],sys.argv[2])

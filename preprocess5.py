@@ -18,6 +18,8 @@ def parseArgs():
     parser.add_argument('-mode','--mode', dest='mode', help="Name of library prep, Either 'single' or 'paired', for single end or paired end data respectively, [default = %(default)s]",default="paired")
     parser.add_argument('-dual','--dual_index',dest='dual_index',help='Include this flag if dual indices are used (UMIs both on R1 and R2)',action='store_true')
     parser.add_argument('-reverse','--reverse_index',dest='reverse_index',help="Include this flag if a single index (UMI) is used, but the UMI is located on R2 (reverse read). Default is UMI on R1.", action='store_true')
+    parser.add_argument('-tmpdir','--tmp_dir',dest='tmpdir',help="temp directory where the chunck files are written and then removed. Should be the scratch directory on the node. Only used if num_threads > 1. [default = %(default)s]", default="/tmp/")
+    parser.add_argument('-cs','--chunk_size',dest='chunksize', help="Chunk size for reading the fastq files in chunks. Only used if num_threads > 1. [default = %(default)i]", default=25000)
     parser.add_argument('-t','--num_threads',dest='num_threads',help='Number of threads to run the program on. Default=%(default)s',default='1')
     args=parser.parse_args(sys.argv[1:])
     return(args)
@@ -29,12 +31,44 @@ def check_output_directory(outdir):
         os.mkdir(outdir)
         return(outdir)
 
+def generate_random_dir(tmpdir):
+    import datetime
+    newtmpdir=tmpdir+'/r'+datetime.datetime.now().strftime("%y%m%d_%H%M%S")+'/'
+    newtmpdir=check_output_directory(newtmpdir)
+    return(newtmpdir)
+
 def get_sample_name(read1,mode):
     if mode=='single':
         samplename=read1.split('/')[-1].rstrip('fastq').rstrip('fastq.gz')
     elif mode=='paired':
         samplename=read1.split('/')[-1].rstrip('fastq').rstrip('fastq.gz').rstrip('_R012')
     return(samplename)
+
+def chunks_paired(read1,read2,chunksize,tmpdir):
+    fid = 1
+    name_list = []
+    with gzip.open(read1,'rb') as infile1:#, gzip.open(read2,'rb') as infile2:
+        chunkname = tmpdir + '/' +  'chunk%d' % fid
+        f1 = gzip.open(chunkname+'_1.fastq.gz', 'wb')
+        #f2 = gzip.open(chunkname+'_2.fastq.gz', 'wb')
+        for i, a in enumerate(infile1):
+            f1.write(a)
+            #f2.write(b)
+            
+            if not (i+1) % (chunksize*4) and not i==0:
+                f1.close()
+                #f2.close()
+                name_list.append(chunkname+'_1.fastq.gz')
+                fid += 1
+                chunkname = tmpdir + '/chunk%d' % fid
+                f1 = gzip.open(chunkname+'_1.fastq.gz', 'wb')
+                #f2 = gzip.open(chunkname+'_2.fastq.gz', 'wb')
+        #name_list.append((chunkname+'_1.fastq.gz',chunkname+'_2.fastq.gz'))
+        name_list.append(chunkname+'_1.fastq.gz')
+        f1.close()
+    return name_list
+
+
 
 def trim_barcode(sequence, barcode_length, spacer_length):
     barcode=sequence[:barcode_length]
@@ -150,6 +184,12 @@ def main(args):
     logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S',level=logging.DEBUG)
     logging.info('Starting UMI Error Correct')
     args.output_path=check_output_directory(args.output_path)
+    newtmpdir=generate_random_dir(args.tmpdir)
+    args.chunksize=int(args.chunksize)
+    #if int(args.num_threads)>1:
+        #if args.mode=='paired':
+            #filelist=chunks_paired(args.read1,args.read2,args.chunksize,newtmpdir)
+            #print(filelist)
     logging.info('Writing output files to {}'.format(args.output_path))
     if args.mode=='paired':
         if not args.read2:
