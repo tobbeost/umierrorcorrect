@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+import sys
+import argparse
+
+def parseArgs():
+    parser=argparse.ArgumentParser(description="Filter cons file by removing positions without annotation and with a raw sequencing depth lower than threshold.")
+    parser.add_argument('-i', '--infile',dest='infile', help='Path to the input file, required', required=True)
+    parser.add_argument('-d','--raw_depth', dest='raw_depth_cutoff',help='Raw depth cutoff, [default = %(default)s]',default='150')
+    parser.add_argument('-f','--family_sizes', dest='family_sizes',help='Family sizes to include, separated by comma. default= %(default)s',default='0,1,2,3,4,5,7,10,20,30')
+    args=parser.parse_args(sys.argv[1:])
+    return(args)
+
+
+def filter_cons(filename,raw_depth_cutoff=150,fsizes='0,1,2,3,4,5,7,10,20,30'):
+    outfilename=filename[:-5]+'_filtered.cons'
+    fs=fsizes.split(',')
+    with open(filename) as f, open(outfilename,'w') as g:
+        header=f.readline()
+        g.write(header)
+        passdepth=False
+        for line in f:
+            parts=line.split('\t')
+            if parts[2] not in '':
+                pos=parts[1]
+                fsize=parts[-3]
+                if fsize=='0':
+                    depth=int(parts[-4])
+                    if depth >= raw_depth_cutoff:
+                        g.write(line)
+                        passdepth=True
+                    else:
+                        passdepth=False
+                elif passdepth==True and fsize in fs:
+                    g.write(line)
+
+if __name__=='__main__':
+    args=parseArgs()
+    args.raw_depth_cutoff=int(args.raw_depth_cutoff)
+    filter_cons(args.infile,args.raw_depth_cutoff,args.family_sizes)
+
+

@@ -16,12 +16,9 @@ class umi_cluster:
 
 def hamming_distance(a, b):
     """Returns the Hamming distance between two strings of equal length"""
-    try:
-        assert len(a) == len(b) 
-        return sum(i != j for i , j in zip(a, b))
-    except AssertionError as error:
-        print('Barcode lengths are not equal for {}. {}'.format(a,b))
-        raise(error)
+    assert len(a) == len(b) 
+    return sum(i != j for i , j in zip(a, b))
+
 def create_substring_matrix(barcodedict,edit_distance_threshold):
     """Divide each barcode in two or three substrings of (approximately) equal length"""
     umi_length=len(list(barcodedict.keys())[0])

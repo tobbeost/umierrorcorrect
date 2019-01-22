@@ -28,8 +28,8 @@ def get_chromosome_list_from_bam(f):
         
 
 def group_by_position(f,chrx,pos_threshold):
-regions={}
-reads=f.fetch(chrx)
+    regions={}
+    reads=f.fetch(chrx)
     current_pos=-pos_threshold
     current_end=-pos_threshold
     for line in reads:

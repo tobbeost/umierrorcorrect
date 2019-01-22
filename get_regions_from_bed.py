@@ -38,7 +38,7 @@ def merge_regions(regions,pos_threshold):
 def main(bedfile):
     regions=read_bed(bedfile)
     regions=sort_regions(regions)
-    regions=merge_regions(regions,100)
+    regions=merge_regions(regions,10)
     for r in regions:
         r2=tuple(str(x) for x in r)
         print('\t'.join(r2))

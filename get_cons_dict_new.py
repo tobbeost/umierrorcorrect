@@ -10,7 +10,7 @@ from itertools import groupby
 
 class consensus_read:
     '''Class for representing a consensus read, useful for writing to BAM'''
-    def __init__(self,contig,regionid,position_start,name,count):
+    def __init__(self,contig,position_start,name,count):
         self.contig=contig
         self.start_pos=position_start
         self.seq=''
@@ -18,7 +18,7 @@ class consensus_read:
         self.indel_read=0
         self.nmtag=0
         self.cigarstring=''
-        self.name='Consensus_read_{}_{}_Count={}'.format(regionid,name,count)
+        self.name='Consensus_read_{}_{}_Count={}'.format(contig,name,count)
         self.count=count
     def add_base(self,base,qual):
         self.seq=self.seq+base
@@ -40,19 +40,16 @@ class consensus_read:
         return(cigar)
         
     def write_to_bam(self,f):
-        #if self.name.split('_')[3]=='CGTAGTTGTCCT':
-        #    print(self.cigarstring)
-        #    print(self.get_cigar())
+        if self.name.split('_')[3]=='CGTAGTTGTCCT':
+            print(self.cigarstring)
+            print(self.get_cigar())
         a = pysam.AlignedSegment()
         a.query_name = self.name
         a.query_sequence=self.seq
         a.flag = 0
-        #if self.contig.lower().startswith('chr'):
-        #    self.contig=self.contig.lower().lstrip('chr')
-        #if self.contig.lower().startswith('x'):
-        #    a.reference_id
-        a.reference_id = f.references.index(self.contig)
-        #a.reference_id = int(self.contig) - 1
+        if self.contig.lower().startswith('chr'):
+            self.contig=self.contig.lower().lstrip('chr')
+        a.reference_id = int(self.contig) - 1
         a.reference_start = self.start_pos 
         a.mapping_quality = 60
         a.cigar = self.get_cigar()
@@ -179,10 +176,7 @@ def write_to_cons(consensus_seq,filename,fsizes='0,1,2,3,4,5,7,10,20,30'):
 def calc_consensus_probabilities(cons_pos):
     p={base:calc_consensus(base,cons_pos) for base in 'ATCG'}
     denom=sum(p.values())
-    if denom > 0:
-        probs={base:p[base]/denom for base in 'ATCG'}
-    else:
-        probs={base:0 for base in 'ATCG'}
+    probs={base:p[base]/denom for base in 'ATCG'}
     cons_base=max(probs, key=probs.get)
     if probs[cons_base]==1:
         cons_phred=60
@@ -248,74 +242,73 @@ def get_consensus(bamfilename,umis,family_sizes,ref_seq):
     #print(n)
     return(position_matrix,singleton_matrix)
 
-def getConsensus3(group_seqs,contig,regionid,indel_freq_threshold,umi_info):
+def getConsensus3(group_seqs,contig,indel_freq_threshold,umi_info):
     '''Takes a list of pysam entries (rows in the BAM file) as input and generates a consensus sequence.'''
     consensus={}
     for read in group_seqs:
-        if read.cigarstring:
-            if 'I' not in read.cigarstring and 'D' not in read.cigarstring: #no indel in read
-                sequence=read.seq
-                qual=read.qual
-                for qpos,refpos in read.get_aligned_pairs(matches_only=True):
+        if 'I' not in read.cigarstring and 'D' not in read.cigarstring: #no indel in read
+            sequence=read.seq
+            qual=read.qual
+            for qpos,refpos in read.get_aligned_pairs(matches_only=True):
+                base=sequence[qpos]
+                if refpos not in consensus:
+                    consensus[refpos]={}
+                if base not in consensus[refpos]:
+                    consensus[refpos][base]=[]
+                consensus[refpos][base].append(get_phred(qual[qpos]))
+        else: #indel at next position
+            positions=read.get_aligned_pairs(matches_only=True)
+            q,ref=positions[0]
+            q=q-1
+            ref=ref-1
+            for qpos,refpos in positions:
+                if not qpos==q+1:
+                    #insertion
+                    allele=read.seq[q+1:qpos]
+                    #inspos=refpos-1
+                    if refpos not in consensus:
+                        consensus[refpos]={}
+                    if 'I' not in consensus[refpos]:
+                        consensus[refpos]['I']={}
+                    if allele not in consensus[refpos]['I']:
+                        consensus[refpos]['I'][allele]=0
+                    consensus[refpos]['I'][allele]+=1
+                    sequence=read.seq
+                    qual=read.qual
+                    base=sequence[qpos]
+                    if base not in consensus[refpos]:
+                        consensus[refpos][base]=[]
+                    consensus[refpos][base].append(get_phred(qual[qpos]))
+                elif not refpos==ref+1:
+                    #deletion
+                    dellength=refpos-(ref+1)
+                    delpos=refpos-dellength
+                    if delpos not in consensus:
+                        consensus[delpos]={}
+                    if 'D' not in consensus[delpos]:
+                        consensus[delpos]['D']={}
+                    if dellength not in consensus[delpos]['D']:
+                        consensus[delpos]['D'][dellength]=0
+                    consensus[delpos]['D'][dellength]+=1
+                    sequence=read.seq
+                    qual=read.qual
                     base=sequence[qpos]
                     if refpos not in consensus:
                         consensus[refpos]={}
                     if base not in consensus[refpos]:
                         consensus[refpos][base]=[]
                     consensus[refpos][base].append(get_phred(qual[qpos]))
-            else: #indel at next position
-                positions=read.get_aligned_pairs(matches_only=True)
-                q,ref=positions[0]
-                q=q-1
-                ref=ref-1
-                for qpos,refpos in positions:
-                    if not qpos==q+1:
-                        #insertion
-                        allele=read.seq[q+1:qpos]
-                        #inspos=refpos-1
-                        if refpos not in consensus:
-                            consensus[refpos]={}
-                        if 'I' not in consensus[refpos]:
-                            consensus[refpos]['I']={}
-                        if allele not in consensus[refpos]['I']:
-                            consensus[refpos]['I'][allele]=0
-                        consensus[refpos]['I'][allele]+=1
-                        sequence=read.seq
-                        qual=read.qual
-                        base=sequence[qpos]
-                        if base not in consensus[refpos]:
-                            consensus[refpos][base]=[]
-                        consensus[refpos][base].append(get_phred(qual[qpos]))
-                    elif not refpos==ref+1:
-                        #deletion
-                        dellength=refpos-(ref+1)
-                        delpos=refpos-dellength
-                        if delpos not in consensus:
-                            consensus[delpos]={}
-                        if 'D' not in consensus[delpos]:
-                            consensus[delpos]['D']={}
-                        if dellength not in consensus[delpos]['D']:
-                            consensus[delpos]['D'][dellength]=0
-                        consensus[delpos]['D'][dellength]+=1
-                        sequence=read.seq
-                        qual=read.qual
-                        base=sequence[qpos]
-                        if refpos not in consensus:
-                            consensus[refpos]={}
-                        if base not in consensus[refpos]:
-                            consensus[refpos][base]=[]
-                        consensus[refpos][base].append(get_phred(qual[qpos]))
-                    else:
-                        sequence=read.seq
-                        qual=read.qual
-                        base=sequence[qpos]
-                        if refpos not in consensus:
-                            consensus[refpos]={}
-                        if base not in consensus[refpos]:
-                            consensus[refpos][base]=[]
-                        consensus[refpos][base].append(get_phred(qual[qpos]))
-                    q=qpos
-                    ref=refpos
+                else:
+                    sequence=read.seq
+                    qual=read.qual
+                    base=sequence[qpos]
+                    if refpos not in consensus:
+                        consensus[refpos]={}
+                    if base not in consensus[refpos]:
+                        consensus[refpos][base]=[]
+                    consensus[refpos][base].append(get_phred(qual[qpos]))
+                q=qpos
+                ref=refpos
 
 
             #curr_index=0
@@ -326,7 +319,7 @@ def getConsensus3(group_seqs,contig,regionid,indel_freq_threshold,umi_info):
             #print(read.to_string())#consensusseq={}
     if len(consensus)>0:
         consensus_sorted=sorted(consensus)
-        consread=consensus_read(contig,regionid,consensus_sorted[0],umi_info.centroid,umi_info.count)
+        consread=consensus_read(contig,consensus_sorted[0],umi_info.centroid,umi_info.count)
         for pos in sorted(consensus_sorted):
             if 'I' in consensus[pos]:
                 #first add the insertion if it is in the majority of the reads, then add the base at the next position
@@ -377,10 +370,10 @@ def getConsensus3(group_seqs,contig,regionid,indel_freq_threshold,umi_info):
     #            break
     #return(consensusseq)
 
-def get_all_consensus(position_matrix,umis,contig,regionid,indel_frequency_cutoff):
+def get_all_consensus(position_matrix,umis,contig):
     consensuses={}
     for umi in position_matrix:
-        consensuses[umi]=getConsensus3(position_matrix[umi],contig,regionid,indel_frequency_cutoff,umis[umi])
+        consensuses[umi]=getConsensus3(position_matrix[umi],contig,50.0,umis[umi])
     return(consensuses)
     
 
@@ -392,6 +385,7 @@ def get_cons_dict(bamfilename,umis,contig,start,end,include_singletons):
         alignment=f.fetch(contig,start,end)
         for read in alignment:
             barcode=read.qname.split(':')[-1]
+            if 
             pos=read.pos
             if pos>=start and pos <=end:
             #if barcode not in ['ATGGGGGGGGGG','TCGGGGGGGGGG','TAGGGGGTGGGG','TAGGGGGGGGGG']:

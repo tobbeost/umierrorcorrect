@@ -86,10 +86,10 @@ def get_max_number_of_barcodes(regions,pos):
     else:
         return(0)
 
-def remove_singleton_regions(regions):
+def remove_singleton_regions(regions,cutoff):
     newregions={}
     for chrx in regions:
-        newregions[chrx]=dict((x,y) for (x,y) in regions[chrx].items() if get_max_number_of_barcodes(regions[chrx], x)>1)
+        newregions[chrx]=dict((x,y) for (x,y) in regions[chrx].items() if get_max_number_of_barcodes(regions[chrx], x)>cutoff)
     return(newregions)
 
 def readBam(infile,position_threshold):
@@ -104,7 +104,7 @@ def readBam(infile,position_threshold):
             chrends[chrx]=ends
             #chrregions[chrx]=group_by_position(f,chrx,position_threshold)
 
-        regions=remove_singleton_regions(chrregions)
+        regions=remove_singleton_regions(chrregions,2)
         #for chrx in chrs:
         #    print(chrx,regions[chrx])
 
@@ -127,7 +127,7 @@ def read_bam_from_bed(infile,bedfile,position_threshold):
                 if contig not in chrregions:
                     chrregions[contig]={}
                 chrregions[contig][start]=count_umis_in_region(f,contig,start,end)
-        regions=remove_singleton_regions(chrregions)
+        regions=remove_singleton_regions(chrregions,2)
     return(regions)
 
 

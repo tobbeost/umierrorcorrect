@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 from group_new import readBam,read_bam_from_bed
 from testgroup5 import umi_cluster,cluster_barcodes,get_connected_components,merge_clusters
-from get_cons_dict2 import get_cons_dict, get_all_consensus,write_singleton_reads,consensus_read
+from get_cons_dict2 import get_cons_dict, get_all_consensus,write_singleton_reads,consensus_read,get_reference_sequence
+from test10 import get_cons_info,write_consensus
+from get_regions_from_bed2 import read_bed,sort_regions,merge_regions,get_annotation
 import sys
 import os
 import pysam
@@ -12,6 +14,8 @@ def parseArgs():
     parser=argparse.ArgumentParser(description="Pipeline for analyzing  barcoded amplicon sequencing data with Unique molecular identifiers (UMI)")
     parser.add_argument('-o', '--output_path',dest='output_path', help='Path to the output directory, required', required=True)
     parser.add_argument('-b','--bam', dest='bam_file',help='Path to BAM-file')
+    parser.add_argument('-bed','--bed-file', dest='bed_file',help='Path to a BED file defining the targeted regions, i.e. chromosomal positions. The Bed file is used for annotation.')
+    parser.add_argument('-r','--reference', dest='reference_file', help='Path to the reference sequence in Fasta format (indexed), Used for annotation')
     parser.add_argument('-d','--edit_distance', dest='edit_distance_threshold', help="Edit distance threshold for UMI clustering, [default = %(default)s]",default=1)
     parser.add_argument('-p','--position_threshold',dest='position_threshold',help='Position threshold for grouping by position [default = %(default)s]',default=10)
     parser.add_argument('-singletons','--include_singletons', dest='include_singletons',action='store_true',help='Include this flag if singleton reads should be included in the output consensus read bam file. Note that the singletons will not be error corrected')
@@ -27,15 +31,20 @@ def parseArgs():
 #    return(umis)
 #
 #    '''Cluster UMIs based on UMI sequence for one region'''
-
+def check_output_directory(outdir):
+    if os.path.isdir(outdir):
+        return(outdir)
+    else:
+        os.mkdir(outdir)
+        return(outdir)
 
 def cluster_consensus_worker(args):
-    umi_dict, tmpfilename, contig, start, end,  edit_distance_threshold,bamfilename,include_singletons=args
+    umi_dict, tmpfilename, regionid, contig, start, end,  edit_distance_threshold,bamfilename,include_singletons,annotations,fasta=args
     adj_matrix=cluster_barcodes(umi_dict,edit_distance_threshold)
     clusters=get_connected_components(umi_dict,adj_matrix)
     umis=merge_clusters(umi_dict,clusters)
-    position_matrix,singleton_matrix=get_cons_dict(bamfilename,umis,contig,start,end,include_singletons)
-    consensus_seq=get_all_consensus(position_matrix,umis,contig)
+    position_matrix,singleton_matrix=get_cons_dict(bamfilename,umis,contig,start,end,True) #include_singletons=True
+    consensus_seq=get_all_consensus(position_matrix,umis,contig,regionid)
     outfilename=tmpfilename
     with pysam.AlignmentFile(bamfilename,'rb') as f, pysam.AlignmentFile(outfilename,'wb',template=f) as g:
         for cons_read in consensus_seq.values():
@@ -43,7 +52,18 @@ def cluster_consensus_worker(args):
                 cons_read.write_to_bam(g)
         if include_singletons:
             write_singleton_reads(singleton_matrix,contig,g)
-    
+    cons=get_cons_info(consensus_seq,singleton_matrix)
+    consfilename=outfilename.rstrip('.bam')+'.cons'
+    statfilename=outfilename.rstrip('.bam')+'.hist'
+    startpos=min(list(cons.keys()))
+    endpos=max(list(cons.keys()))+1
+    with pysam.FastaFile(fasta) as f:
+        ref_seq=get_reference_sequence(f,contig,startpos,endpos)
+    with open(consfilename,'w') as g:
+        write_consensus(g,cons,ref_seq,startpos,contig,annotations,False)
+    with open(statfilename,'w') as g2:
+        regionname='{}:{}-{}'.format(contig,start,end)
+        g2.write('\t'.join([str(regionid),regionname,'singletons: '+str(len(singleton_matrix))])+'\n')
 
 
 #def consensus_worker():
@@ -76,14 +96,40 @@ def merge_bams(output_path,bamfilelist):
     for filename in bamfilelist:
         os.remove(filename)
 
-def cluster_umis_all_regions(regions,ends,edit_distance_threshold,bamfilename,output_path,include_singletons,num_cpus):
+def merge_cons(output_path,consfilelist):
+    with open(output_path+'/consensus.cons','w') as g:
+        g.write('Contig\tPosition\tReference\tA\tC\tG\tT\tI\tD\tN\tCoverage\tConsensus group size\tMax Non-ref Allele Frequency\tMax Non-ref Allele\n')
+        for filename in consfilelist:
+            with open(filename) as f:
+                for line in f:
+                    g.write(line)
+    
+    for filename in consfilelist:
+        os.remove(filename)
+
+def merge_stat(output_path,statfilelist):
+    with open(output_path+'/consensus.hist','w') as g:
+        for filename in statfilelist:
+            with open(filename) as f:
+                for line in f:
+                    g.write(line)
+
+    for filename in statfilelist:
+        os.remove(filename)
+
+def cluster_umis_all_regions(regions,ends,edit_distance_threshold,bamfilename,output_path,include_singletons,fasta,bedregions,num_cpus):
     argvec=[]
     bamfilelist=[]
     i=0
     for contig in regions:
         for pos in regions[contig]:
+            if contig in bedregions:
+                annotations=bedregions[contig]
+            else:
+                annotations=[]
+            endpos=list(regions[contig][pos].keys())[-1]
             tmpfilename='{}/tmp_{}.bam'.format(output_path,i)
-            argvec.append((regions[contig][pos],tmpfilename,contig,pos,ends[contig][pos],edit_distance_threshold,bamfilename,include_singletons))
+            argvec.append((regions[contig][pos],tmpfilename,i,contig,pos,ends[contig][pos],edit_distance_threshold,bamfilename,include_singletons,annotations,fasta))
             bamfilelist.append('{}/tmp_{}.bam'.format(output_path,i))
             i+=1
         
@@ -107,18 +153,29 @@ def cluster_umis_on_position(bamfilename,position_threshold):
     return(regions,ends)
 
 def main(args):
+    args.output_path=check_output_directory(args.output_path)
     regions,ends=cluster_umis_on_position(args.bam_file,args.position_threshold)
+    nregions=0
     for chrx in regions:
         for r in regions[chrx]:
-            print(chrx,r,ends[chrx][r],len(regions[chrx][r]),regions[chrx][r].most_common(1))
+            nregions+=len(regions[chrx][r])
+    print("Number of regions, ",nregions)
     edit_distance_threshold = args.edit_distance_threshold
     if args.num_threads:
         num_cpus=args.num_threads
     else:
         num_cpus=cpu_count()
     print(num_cpus)
-    bamfilelist=cluster_umis_all_regions(regions,ends,edit_distance_threshold,args.bam_file,args.output_path,args.include_singletons,num_cpus)
+    fasta=args.reference_file
+    bedregions=read_bed(args.bed_file)
+    bedregions=sort_regions(bedregions)
+    bedregions=merge_regions(bedregions,0)
+    bamfilelist=cluster_umis_all_regions(regions,ends,edit_distance_threshold,args.bam_file,args.output_path,args.include_singletons,fasta,bedregions,num_cpus)
     merge_bams(args.output_path,bamfilelist)
+    consfilelist=[x.rstrip('.bam')+'.cons' for x in bamfilelist]
+    merge_cons(args.output_path,consfilelist)
+    statfilelist=[x.rstrip('.bam')+'.hist' for x in bamfilelist]
+    merge_stat(args.output_path,statfilelist)
     ##print(regions)
 
 if __name__=='__main__':
