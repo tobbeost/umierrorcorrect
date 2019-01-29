@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import gzip
-from handle_sequences2 import read_fastq, read_fastq_paired_end
+from src.handle_sequences import read_fastq, read_fastq_paired_end
 import argparse
 import os
 import logging
@@ -42,6 +42,7 @@ def run_pigz(filename,tmpdir,num_threads):
     command=['unpigz','-p', num_threads,'-c', filename]
     with open(outfilename,'w') as g:
         p=subprocess.Popen(command,stdout=g)
+    p.communicate()
     return(outfilename)
     
 
@@ -121,9 +122,12 @@ def preprocess_pe(r1file,r2file,outfile1,outfile2,barcode_length,spacer_length,d
         logger.warning(e+" Spacer length needs to be an integer")
         sys.exit(1)
     print(r1file,r2file)
+    i = 0
     read_start=barcode_length+spacer_length
     with open(r1file) as f1, open(r2file) as f2, open(outfile1,'w') as g1, open(outfile2,'w') as g2:
         for name1,seq1,qual1,name2,seq2,qual2 in read_fastq_paired_end(f1,f2):
+            if i == 0:
+                print(name1,seq1,qual1)
             if dual_index==True:
                 barcode=seq1[:barcode_length]+seq2[:barcode_length]
             else:
@@ -137,7 +141,7 @@ def preprocess_pe(r1file,r2file,outfile1,outfile2,barcode_length,spacer_length,d
                 g2.write('\n'.join([newname2,seq2[read_start:],'+',qual2[read_start:]])+'\n')
             else:
                 g2.write('\n'.join([newname2,seq2,'+',qual2])+'\n')
-
+            i += 1
 
     #if dual_index==False:
     #    with gzip.open(r1file,'rb') as f, gzip.open(outfile1,'wb') as g:
@@ -226,7 +230,7 @@ def main(args):
         if args.reverse_index==True:
             #switch forward and reverse read
             r1filetmp=r1file
-            r2file=r1file
+            r1file=r2file
             r2file=r1filetmp
             outfile1=args.output_path+'/'+samplename+'_R2.fastq'
             outfile2=args.output_path+'/'+samplename+'_R1.fastq'
@@ -235,6 +239,8 @@ def main(args):
             #r2file=args.read2
             outfile1=args.output_path+'/'+samplename+'_R1.fastq'
             outfile2=args.output_path+'/'+samplename+'_R2.fastq'
+        print(r1file,r2file)
+        print(outfile1,outfile2)
         preprocess_pe(r1file,r2file,outfile1,outfile2,args.umi_length,args.spacer_length,args.dual_index)
 if __name__=='__main__':
     args=parseArgs()

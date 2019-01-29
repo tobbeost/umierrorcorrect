@@ -128,9 +128,14 @@ def read_bam_from_bed(infile, bedfile, position_threshold):
     regions = read_bed(bedfile)
     regions = sort_regions(regions)
     regions = merge_regions(regions, position_threshold)
+    newregions = []
+    for contig in regions:
+        for a, b, c in regions[contig]:
+            newregions.append((contig, a, b, c))
+
     with pysam.AlignmentFile(infile, 'rb') as f:
         chrs = get_chromosome_list_from_bam(f)
-        for contig, start, end, name in regions:
+        for contig, start, end, name in newregions:
             if contig in chrs:
                 if contig not in chrregions:
                     chrregions[contig] = {}
