@@ -12,10 +12,10 @@ Run the pipeline
 '''
 
 import sys
-from src.handle_sequences import read_fastq, read_fastq_paired_end
-from preprocess8 import run_preprocessing
-from run_mapping2 import run_mapping
-from umi_error_correct7 import run_umi_errorcorrect
+from umierrorcorrect.src.handle_sequences import read_fastq, read_fastq_paired_end
+from umierrorcorrect.preprocess import run_preprocessing
+from umierrorcorrect.run_mapping import run_mapping
+from umierrorcorrect.umi_error_correct import run_umi_errorcorrect
 import argparse
 import os
 import logging
