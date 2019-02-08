@@ -2,7 +2,10 @@
 from setuptools import setup
 from setuptools import find_packages
 
-pack=find_packages()
+pack = find_packages()
+
+install_requires = ["pysam>=0.8.4"]
+
 
 setup(name='umierrorcorrect',
       version='0.1',
@@ -15,6 +18,7 @@ setup(name='umierrorcorrect',
       package_data={'umierrorcorrect': ['README.md']
                    },
       include_package_data=True,
+      install_requires=install_requires,
       classifiers=['Topic :: Scientific/Engineering :: Bio-Informatics'],
       scripts=['umierrorcorrect/run_umierrorcorrect.py',
                 'umierrorcorrect/preprocess.py',
