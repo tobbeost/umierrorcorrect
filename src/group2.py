@@ -32,12 +32,14 @@ def group_by_position(f, chrx, pos_threshold):
     ends = {}
     reads = f.fetch(chrx)
     current_pos = -pos_threshold
+ 
     current_end = -(2*pos_threshold) + 1
     # current_aend=-pos_threshold
     for line in reads:
         pos = line.pos
         if pos > current_end + pos_threshold:
             # new region
+            #print(pos)
             if pos != -pos_threshold:
                 ends[current_pos] = current_end + 1
             current_pos = pos
@@ -52,6 +54,7 @@ def group_by_position(f, chrx, pos_threshold):
             barcode = line.qname.split(':')[-1]
             # if barcode not in regions[current_pos]:
             #     regions[current_pos][barcode]=0
+            #print(pos)
             regions[current_pos][barcode] += 1
             current_end = pos
             # aend=line.reference_end

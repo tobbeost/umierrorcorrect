@@ -171,7 +171,7 @@ def preprocess_pe(r1file, r2file, outfile1, outfile2, barcode_length, spacer_len
                 g2.write('\n'.join([newname2, seq2, '+', qual2]) + '\n')
 
 
-def main(args):
+def run_preprocessing(args):
     '''Start preprocessing.'''
     logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
     logging.info('Starting UMI Error Correct')
@@ -192,12 +192,6 @@ def main(args):
     else:
         r1file = run_unpigz(args.read1, newtmpdir, args.num_threads)
 
-    # if int(args.num_threads)>1:
-    #    if args.mode=='paired':
-    #        print(r1file,r2file)
-    #        filelist=chunks_paired(r1file,r2file,args.chunksize,newtmpdir)
-    # print(filelist)
-    
     logging.info('Writing output files to {}'.format(args.output_path))
     samplename = get_sample_name(args.read1, args.mode)
     if args.mode == 'single':
@@ -208,6 +202,7 @@ def main(args):
         run_pigz(outfilename, args.num_threads)
         os.remove(r1file)
         os.rmdir(newtmpdir)
+        fastqfiles=[outfilename + '.gz']
     else:
         if args.reverse_index:
             # switch forward and reverse read
@@ -227,6 +222,12 @@ def main(args):
         os.remove(r1file)
         os.remove(r2file)
         os.rmdir(newtmpdir)
+        fastqfiles=[outfile1 + '.gz', outfile2 + '.gz']
+    return(fastqfiles)
+
+def main(args):
+    fastqfiles=run_preprocessing(args)
+
 
 if __name__ == '__main__':
     args = parseArgs()

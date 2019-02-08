@@ -166,7 +166,7 @@ def cluster_umis_on_position(bamfilename, position_threshold, group_method, bedf
     return(regions, ends)
 
 
-def main(args):
+def run_umi_errorcorrect(args):
     args.output_path = check_output_directory(args.output_path)
     if args.regions_from_bed:
         group_method = 'fromBed'
@@ -194,8 +194,9 @@ def main(args):
     merge_cons(args.output_path, consfilelist)
     statfilelist = [x.rstrip('.bam') + '.hist' for x in bamfilelist]
     merge_stat(args.output_path, statfilelist)
-    # print(regions)
 
+def main(args):
+    run_umi_errorcorrect(args)
 
 if __name__ == '__main__':
     args = parseArgs()
