@@ -16,10 +16,10 @@ setup(name='umierrorcorrect',
                    },
       include_package_data=True,
       classifiers=['Topic :: Scientific/Engineering :: Bio-Informatics'],
-      scripts=['run_umierrorcorrect.py', 
-                'preprocess.py',
-                'run_mapping.py',
-                'umi_error_correct.py'
-                'filter_bam.py'
-                'filter_cons.py'],
+      scripts=['umierrorcorrect/run_umierrorcorrect.py', 
+                'umierrorcorrect/preprocess.py',
+                'umierrorcorrect/run_mapping.py',
+                'umierrorcorrect/umi_error_correct.py'
+                'umierrorcorrect/filter_bam.py'
+                'umierrorcorrect/filter_cons.py'],
       zip_safe=False)
