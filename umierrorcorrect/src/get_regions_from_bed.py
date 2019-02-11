@@ -6,7 +6,9 @@ def read_bed(bedfile):
     regions = {}
     with open(bedfile, 'r') as f:
         for line in f:
-            contig, start, end, name, *rest = line.split()
+            line = line.strip()
+            parts = line.split()
+            contig, start, end, name  = parts[0:4]
             if contig not in regions:
                 regions[contig] = []
             regions[contig].append((int(start), int(end), name))
