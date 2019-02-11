@@ -2,7 +2,7 @@
 '''
 UMI error correct, run_umierrorcorrect.py - Run the pipeline
 
-:Author: Tobias Österlund
+:Author: Tobias Osterlund
 
 Purpose
 -------

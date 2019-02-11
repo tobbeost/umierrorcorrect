@@ -3,7 +3,7 @@
 UMI error correct, preprocess.py - remove UMI and append to the header of Fastq sequences.
 ================================
 
-:Author: Tobias Österlund
+:Author: Tobias Osterlund
 
 Purpose
 -------
