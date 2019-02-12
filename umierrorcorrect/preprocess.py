@@ -30,6 +30,7 @@ def parseArgs():
     parser.add_argument('-mode', '--mode', dest='mode', help="Name of library prep, Either 'single' or 'paired', for single end or paired end data respectively, [default = %(default)s]", default="paired")
     parser.add_argument('-dual', '--dual_index', dest='dual_index', help='Include this flag if dual indices are used (UMIs both on R1 and R2)', action='store_true')
     parser.add_argument('-reverse', '--reverse_index', dest='reverse_index', help="Include this flag if a single index (UMI) is used, but the UMI is located on R2 (reverse read). Default is UMI on R1.", action='store_true')
+    parser.add_argument('-s', '--sample_name', dest='sample_name', help='Sample name which is used as base name for the output files. If excluded the sample name is automatically extracted from the name of the fastq file(s).')
     parser.add_argument('-tmpdir', '--tmp_dir', dest='tmpdir', help="temp directory where the temporary files are written and then removed. Should be the scratch directory on the node. Default is a temp directory in the output folder.")
     parser.add_argument('-cs', '--chunk_size', dest='chunksize', help="Chunk size for reading the fastq files in chunks. Only used if num_threads > 1. [default = %(default)i]", default=25000)
     parser.add_argument('-t', '--num_threads', dest='num_threads', help='Number of threads to run the program on. Default=%(default)s', default='1')
@@ -78,43 +79,6 @@ def get_sample_name(read1, mode):
     elif mode == 'paired':
         samplename = read1.split('/')[-1].rstrip('fastq').rstrip('fastq.gz').rstrip('_R012')
     return(samplename)
-
-
-def chunks_paired(read1, read2, chunksize, tmpdir):
-    '''Read the fastq files in chunks. Not used in the current pipeline.'''
-    fid = 1
-    name_list = []
-    with open(read1, 'r') as infile1, open(read2, 'r') as infile2:
-        chunkname = tmpdir + '/' + 'chunk%d' % fid
-        print(chunkname)
-        print(chunksize)
-        f1 = open(chunkname+'_1.fastq', 'w')
-        f2 = open(chunkname+'_2.fastq', 'w')
-
-        for i, (a, b) in enumerate(zip(infile1, infile2)):
-            f1.write(a)
-            f2.write(b)
-
-            if not (i+2) % (chunksize*4) and not i == 0:
-                f1.close()
-                f2.close()
-                name_list.append(chunkname+'_1.fastq')
-                fid += 1
-                chunkname = tmpdir + '/chunk%d' % fid
-                f1 = open(chunkname + '_1.fastq', 'w')
-                f2 = open(chunkname + '_2.fastq', 'w')
-        name_list.append((chunkname + '_1.fastq', chunkname + '_2.fastq'))
-        f1.close()
-        f2.close()
-    return name_list
-#
-#
-# def trim_barcode(sequence, barcode_length, spacer_length):
-#    '''Trim the barcode and spacer from a sequence and return the barcode and rest of the sequence.'''
-#    barcode = sequence[:barcode_length]
-#    # spacer=sequence[barcode_length:barcode_length+spacer_length]
-#    rest = sequence[barcode_length+spacer_length:]
-#    return((barcode, rest))
 
 
 def preprocess_se(infilename, outfilename, barcode_length, spacer_length):
@@ -195,7 +159,7 @@ def run_preprocessing(args):
     logging.info('Writing output files to {}'.format(args.output_path))
     samplename = get_sample_name(args.read1, args.mode)
     if args.mode == 'single':
-        outfilename = args.output_path + '/' + samplename + '.fastq'
+        outfilename = args.output_path + '/' + samplename + '_umis_in_header.fastq'
         #print(r1file)
         #print(outfilename)
         preprocess_se(r1file, outfilename, args.umi_length, args.spacer_length)
@@ -209,8 +173,8 @@ def run_preprocessing(args):
             r1filetmp = r1file
             r1file = r2file
             r2file = r1filetmp
-            outfile1 = args.output_path + '/' + samplename + '_R2.fastq'
-            outfile2 = args.output_path + '/' + samplename + '_R1.fastq'
+            outfile1 = args.output_path + '/' + samplename + '_R2_umis_in_header.fastq'
+            outfile2 = args.output_path + '/' + samplename + '_R1_umis_in_header.fastq'
         else:
             # r1file=args.read1
             # r2file=args.read2
