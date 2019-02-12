@@ -37,7 +37,7 @@ def run_mapping(num_threads, reference_file, fastq_files, output_path):
     command = ['samtools', 'sort', '-@',  num_threads, output_file + '.bam', '-o', output_file + '.sorted.bam']
     p = subprocess.Popen(command, stdout=subprocess.PIPE)
     print(p.communicate())
-    command = ['samtools', 'index', '-@', num_threads, output_file + '.sorted.bam']
+    command = ['samtools', 'index', output_file + '.sorted.bam']
     p = subprocess.Popen(command, stdout=subprocess.PIPE)
     print(p.communicate())
     return(output_file + '.sorted.bam')
