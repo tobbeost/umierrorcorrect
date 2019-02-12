@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from __future__ import division
 import sys
 import pickle
 import pysam

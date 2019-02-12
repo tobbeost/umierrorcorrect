@@ -141,7 +141,7 @@ def cluster_umis_all_regions(regions, ends, edit_distance_threshold, bamfilename
                 annotations = []
             # endpos = list(regions[contig][pos].keys())[-1]
             tmpfilename = '{}/tmp_{}.bam'.format(output_path, i)
-            argvec.append((regions[contig][pos], tmpfilename, i, contig, pos, ends[contig][pos], edit_distance_threshold, bamfilename, include_singletons, annotations, fasta, indel_frequency_cutoff))
+            argvec.append((regions[contig][pos], tmpfilename, int(i), contig, int(pos), int(ends[contig][pos]), int(edit_distance_threshold), bamfilename, include_singletons, annotations, fasta, int(indel_frequency_cutoff)))
             bamfilelist.append('{}/tmp_{}.bam'.format(output_path, i))
             i += 1
 
@@ -180,9 +180,9 @@ def run_umi_errorcorrect(args):
     print("Number of regions, ", nregions)
     edit_distance_threshold = args.edit_distance_threshold
     if args.num_threads:
-        num_cpus = args.num_threads
+        num_cpus = int(args.num_threads)
     else:
-        num_cpus = cpu_count()
+        num_cpus = int(cpu_count())
     print(num_cpus)
     fasta = args.reference_file
     bedregions = read_bed(args.bed_file)

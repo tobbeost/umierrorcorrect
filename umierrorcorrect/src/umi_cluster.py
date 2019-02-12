@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # from collections import Counter
 # import time
+from __future__ import division
 import itertools
 # import sys
 import pickle
@@ -32,7 +33,7 @@ def create_substring_matrix(barcodedict, edit_distance_threshold):
     """Divide each barcode in two or three substrings of (approximately) equal length"""
     umi_length = len(list(barcodedict.keys())[0])
     if edit_distance_threshold <= 1:
-        s = round(umi_length/2)
+        s = round(umi_length//2)
         substr_dict1 = {}
         substr_dict2 = {}
         for barcode in barcodedict:
@@ -46,7 +47,7 @@ def create_substring_matrix(barcodedict, edit_distance_threshold):
             substr_dict2[sub2].append(barcode)
         return([substr_dict1, substr_dict2])
     if edit_distance_threshold == 2:
-        s = round(umi_length/3)
+        s = round(umi_length//3)
         substr_dict1 = {}
         substr_dict2 = {}
         substr_dict3 = []
@@ -71,7 +72,7 @@ def get_adj_matrix_from_substring(barcodedict, substrdictlist):
     umi_length = len(list(barcodedict.keys())[0])
     if len(substrdictlist) == 2:
         substr_dict1, substr_dict2 = substrdictlist
-        s = round(umi_length/2)
+        s = round(umi_length//2)
         for barcode in barcodedict:
             neighbors = set()
             sub1 = barcode[:s]
@@ -83,7 +84,7 @@ def get_adj_matrix_from_substring(barcodedict, substrdictlist):
                 yield barcode, neighbor
     if len(substrdictlist) == 3:
         substr_dict1, substr_dict2, substr_dict3 = substrdictlist
-        s = round(umi_length/3)
+        s = round(umi_length//3)
         for barcode in barcodedict:
             neighbors = set()
             sub1 = barcode[:s]
