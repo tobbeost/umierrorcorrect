@@ -47,6 +47,7 @@ The ``run_umierrorcorrect.py`` pipeline performs the following steps:
 
 - Preprocessing of fastq files (remove the UMI and spacer and puts the UMI in the header)
 - Mapping of preprocessed fastq reads to the reference genome
-- Create consensus reads (one representative read per UMI family written to a BAM file).
+- Perform UMI clustering, then error correcion of each UMI cluster
+- Create consensus reads (one representative read per UMI cluster written to a BAM file)
 - Create a consensus output file (collapsed counts per position)
 
