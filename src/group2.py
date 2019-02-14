@@ -2,7 +2,7 @@
 import sys
 import pysam
 from collections import Counter
-from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, merge_regions
+from src.get_regions_from_bed import read_bed, sort_regions, merge_regions
 
 
 # class Region:
