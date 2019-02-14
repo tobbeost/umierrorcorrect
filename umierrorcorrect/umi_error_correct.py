@@ -18,6 +18,7 @@ def parseArgs():
     parser.add_argument('-bed', '--bed-file', dest='bed_file', help='Path to a BED file defining the targeted regions, i.e. chromosomal positions. The Bed file is used for annotation.')
     parser.add_argument('-regions_from_bed', dest='regions_from_bed', help='Include this flag if regions used for UMI clustering and variant calling should be defined from the BED file. Default is to detect the regions automatically from the BAM file. ', action='store_true')
     parser.add_argument('-r', '--reference', dest='reference_file', help='Path to the reference sequence in Fasta format (indexed), Used for annotation')
+    parser.add_argument('-s', '--sample_name', dest='sample_name', help='Sample name that will be used as base name for the output files. If excluded the sample name will be extracted from the BAM file.')
     parser.add_argument('-d', '--edit_distance', dest='edit_distance_threshold', help="Edit distance threshold for UMI clustering, [default = %(default)s]", default=1)
     parser.add_argument('-p', '--position_threshold', dest='position_threshold', help='Position threshold for grouping by position [default = %(default)s]', default=10)
     parser.add_argument('-indel_freq', '--indel_frequency_threshold', dest='indel_frequency_threshold', help='Percent threshold for indels to be included in the consensus read. [default = %(default)s]', default=75.0)
@@ -41,6 +42,15 @@ def check_output_directory(outdir):
     else:
         os.mkdir(outdir)
         return(outdir)
+
+
+def get_sample_name(bamfile):
+    '''Get the sample name as the basename of the input files.'''
+    sample_name=bamfile.split('/')[-1]    
+    if '.sorted' in sample_name:
+        sample_name = sample_name.replace('.sorted','')
+    sample_name = sample_name.replace('.bam','')
+    return(sample_name)
 
 
 def cluster_consensus_worker(args):
@@ -92,8 +102,8 @@ def cluster_consensus_worker(args):
 #                    #print(line)
 #                        g.write(line)
 
-def merge_bams(output_path, bamfilelist):
-    with pysam.AlignmentFile(bamfilelist[0], 'rb') as f,  pysam.AlignmentFile(output_path + '/consensus_reads.bam', 'wb', template=f) as g:
+def merge_bams(output_path, bamfilelist, sample_name):
+    with pysam.AlignmentFile(bamfilelist[0], 'rb') as f,  pysam.AlignmentFile(output_path + '/' + sample_name + '_consensus_reads.bam', 'wb', template=f) as g:
         for line in f:
             g.write(line)
         if len(bamfilelist) > 1:
@@ -106,8 +116,8 @@ def merge_bams(output_path, bamfilelist):
         os.remove(filename)
 
 
-def merge_cons(output_path, consfilelist):
-    with open(output_path + '/consensus.cons', 'w') as g:
+def merge_cons(output_path, consfilelist, sample_name):
+    with open(output_path + '/' + sample_name + '.cons', 'w') as g:
         g.write('Contig\tPosition\tReference\tA\tC\tG\tT\tI\tD\tN\tCoverage\tConsensus group size\tMax Non-ref Allele Frequency\tMax Non-ref Allele\n')
         for filename in consfilelist:
             with open(filename) as f:
@@ -118,8 +128,8 @@ def merge_cons(output_path, consfilelist):
         os.remove(filename)
 
 
-def merge_stat(output_path, statfilelist):
-    with open(output_path + '/consensus.hist', 'w') as g:
+def merge_stat(output_path, statfilelist, sample_name):
+    with open(output_path + '/' + sample_name + '.hist', 'w') as g:
         for filename in statfilelist:
             with open(filename) as f:
                 for line in f:
@@ -173,6 +183,10 @@ def run_umi_errorcorrect(args):
     else:
         group_method = 'automatic'
     print(group_method)
+    if not args.sample_name:
+        args.sample_name = get_sample_name(args.bam_file)
+    print(args.bam_file)
+    print(args.sample_name)
     regions, ends = cluster_umis_on_position(args.bam_file, args.position_threshold, group_method, args.bed_file)
     nregions = 0
     for chrx in regions:
@@ -189,11 +203,11 @@ def run_umi_errorcorrect(args):
     bedregions = sort_regions(bedregions)
     bedregions = merge_regions(bedregions, 0)
     bamfilelist = cluster_umis_all_regions(regions, ends, edit_distance_threshold, args.bam_file, args.output_path, args.include_singletons, fasta, bedregions, num_cpus, args.indel_frequency_threshold)
-    merge_bams(args.output_path, bamfilelist)
+    merge_bams(args.output_path, bamfilelist, args.sample_name)
     consfilelist = [x.rstrip('.bam') + '.cons' for x in bamfilelist]
-    merge_cons(args.output_path, consfilelist)
+    merge_cons(args.output_path, consfilelist, args.sample_name)
     statfilelist = [x.rstrip('.bam') + '.hist' for x in bamfilelist]
-    merge_stat(args.output_path, statfilelist)
+    merge_stat(args.output_path, statfilelist, args.sample_name)
 
 def main(args):
     run_umi_errorcorrect(args)

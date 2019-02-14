@@ -13,7 +13,7 @@ Run the pipeline
 
 import sys
 from umierrorcorrect.src.handle_sequences import read_fastq, read_fastq_paired_end
-from umierrorcorrect.preprocess import run_preprocessing
+from umierrorcorrect.preprocess import run_preprocessing, get_sample_name
 from umierrorcorrect.run_mapping import run_mapping
 from umierrorcorrect.umi_error_correct import run_umi_errorcorrect
 import argparse
@@ -27,7 +27,8 @@ def parseArgs():
     group1.add_argument('-r1', '--read1', dest='read1', help='Path to first FASTQ file, R1, required', required=True)
     group1.add_argument('-r2', '--read2', dest='read2', help='Path to second FASTQ file, R2 if applicable')
     group1.add_argument('-r', '--reference', dest='reference_file', help='Path to the reference sequence in Fasta format (indexed)')
-    group1.add_argument('-bed', '--bed-file', dest='bed_file', help='Path to a BED file defining the targeted regions, i.e. chromosomal positions. The Bed file is used for annotation.')
+    group1.add_argument('-bed', '--bed_file', dest='bed_file', help='Path to a BED file defining the targeted regions, i.e. chromosomal positions. The Bed file is used for annotation.')
+    group1.add_argument('-s', '--sample_name', dest='sample_name', help='Sample name that will be used as base name for the output files. If excluded the sample name will be extracted from the fastq files.')
 
     group2 = parser.add_argument_group('UMI definition options')
     group2.add_argument('-ul', '--umi_length', dest='umi_length', help='Length of UMI sequence (number of nucleotides). The UMI is assumed to be located at the start of the read. Required', required=True)
@@ -53,9 +54,11 @@ def parseArgs():
 
 
 def main(args):
+    if not args.sample_name:
+        args.sample_name = get_sample_name(args.read1, args.mode)
     fastq_files = run_preprocessing(args)
     print(fastq_files)
-    bam_file = run_mapping(args.num_threads, args.reference_file, fastq_files, args.output_path)
+    bam_file = run_mapping(args.num_threads, args.reference_file, fastq_files, args.output_path, args.sample_name)
     args.bam_file = bam_file
     print(args.bam_file)
     run_umi_errorcorrect(args)

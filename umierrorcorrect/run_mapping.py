@@ -11,6 +11,7 @@ def parseArgs():
     parser.add_argument('-r1', '--read1', dest='read1', help='Path to first FASTQ file, R1, required', required=True)
     parser.add_argument('-r2', '--read2', dest='read2', help='Path to second FASTQ file, R2 if applicable')
     parser.add_argument('-r', '--reference', dest='reference_file', help='Path to the reference sequence in Fasta format (indexed), Used for annotation')
+    parser.add_argument('-s', '--sample_name', dest='sample_name', help='Sample name that will be used as base name for the output files. If excluded the sample name will be extracted from the fastq files.')
     parser.add_argument('-t', '--num_threads', dest='num_threads', help='Number of threads to run the program on. Default=%(default)s', default='1')
     args = parser.parse_args(sys.argv[1:])
     return(args)
@@ -25,9 +26,22 @@ def check_output_directory(outdir):
         return(outdir)
 
 
-def run_mapping(num_threads, reference_file, fastq_files, output_path):
+def get_sample_name(read1, mode):
+    '''Get the sample name as the basename of the input files.'''
+    if mode == 'single':
+        if '_umis_in_header' in read1:
+            read1 = read1.replace('_umis_in_header', '')
+        samplename = read1.split('/')[-1].rstrip('fastq').rstrip('fastq.gz')
+    elif mode == 'paired':
+        if '_umis_in_header' in read1:
+            read1 = read1.replace('_umis_in_header', '')
+        samplename = read1.split('/')[-1].rstrip('fastq').rstrip('fastq.gz').rstrip('_R012')
+    return(samplename)
+
+
+def run_mapping(num_threads, reference_file, fastq_files, output_path, sample_name):
     '''Run mapping with bwa to create a SAM file, then convert it to BAM, sort and index the file.'''
-    output_file = output_path+'/output'
+    output_file = output_path + '/' + sample_name
     if len(fastq_files) == 1:
         bwacommand = ['bwa', 'mem', '-t', num_threads, reference_file, fastq_files[0]]
     if len(fastq_files) == 2:
@@ -51,8 +65,13 @@ if __name__ == '__main__':
     args.output_path = check_output_directory(args.output_path)
     if args.read2 is None:
         fastq_files = [args.read1]
+        mode = 'single'
     else:
         fastq_files = [args.read1, args.read2]
+        mode = 'paired'
 
-    bamfile=run_mapping(args.num_threads, args.reference_file, fastq_files, args.output_path)
+    if not args.sample_name:
+        args.sample_name = get_sample_name(args.read1, mode)
+
+    bamfile=run_mapping(args.num_threads, args.reference_file, fastq_files, args.output_path, args.sample_name)
     print(bamfile)

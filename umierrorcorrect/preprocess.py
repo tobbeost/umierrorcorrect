@@ -159,9 +159,10 @@ def run_preprocessing(args):
         r1file = run_unpigz(args.read1, newtmpdir, args.num_threads)
 
     logging.info('Writing output files to {}'.format(args.output_path))
-    samplename = get_sample_name(args.read1, args.mode)
+    if not args.sample_name:
+        args.sample_name = get_sample_name(args.read1, args.mode)
     if args.mode == 'single':
-        outfilename = args.output_path + '/' + samplename + '_umis_in_header.fastq'
+        outfilename = args.output_path + '/' + args.sample_name + '_umis_in_header.fastq'
         #print(r1file)
         #print(outfilename)
         preprocess_se(r1file, outfilename, args.umi_length, args.spacer_length)
@@ -175,13 +176,13 @@ def run_preprocessing(args):
             r1filetmp = r1file
             r1file = r2file
             r2file = r1filetmp
-            outfile1 = args.output_path + '/' + samplename + '_R2_umis_in_header.fastq'
-            outfile2 = args.output_path + '/' + samplename + '_R1_umis_in_header.fastq'
+            outfile1 = args.output_path + '/' + args.sample_name + '_R2_umis_in_header.fastq'
+            outfile2 = args.output_path + '/' + args.sample_name + '_R1_umis_in_header.fastq'
         else:
             # r1file=args.read1
             # r2file=args.read2
-            outfile1 = args.output_path + '/' + samplename + '_R1.fastq'
-            outfile2 = args.output_path + '/'+samplename + '_R2.fastq'
+            outfile1 = args.output_path + '/' + args.sample_name + '_R1_umis_in_header.fastq'
+            outfile2 = args.output_path + '/'+ args.sample_name + '_R2_umis_in_header.fastq'
         preprocess_pe(r1file, r2file, outfile1, outfile2, args.umi_length, args.spacer_length, args.dual_index)
         run_pigz(outfile1, args.num_threads)
         run_pigz(outfile2, args.num_threads)
