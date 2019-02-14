@@ -2,7 +2,7 @@
 from setuptools import setup
 from setuptools import find_packages
 
-pack = find_packages()
+pack = find_packages() 
 
 install_requires = ["pysam>=0.8.4"]
 
