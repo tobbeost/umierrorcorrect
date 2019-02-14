@@ -3,7 +3,7 @@ import argparse
 import subprocess
 import sys
 import os
-import pysam
+
 
 def parseArgs():
     parser = argparse.ArgumentParser(description="Pipeline for analyzing  barcoded amplicon sequencing data with Unique molecular identifiers (UMI)")
@@ -17,7 +17,6 @@ def parseArgs():
 
 
 def check_output_directory(outdir):
-    '''Check if outdir exists, otherwise create it'''
     if os.path.isdir(outdir):
         return(outdir)
     else:
@@ -26,23 +25,24 @@ def check_output_directory(outdir):
 
 
 def run_mapping(num_threads, reference_file, fastq_files, output_path):
-    '''Run mapping with bwa to create a SAM file, then convert it to BAM, sort and index the file.'''
     output_file = output_path+'/output'
     if len(fastq_files) == 1:
         bwacommand = ['bwa', 'mem', '-t', num_threads, reference_file, fastq_files[0]]
     if len(fastq_files) == 2:
         bwacommand = ['bwa', 'mem', '-t', num_threads, reference_file, fastq_files[0], fastq_files[1]]
-    
-    with open(output_file + '.sam', 'w') as g:
-        p1 = subprocess.Popen(bwacommand, stdout=g)
-    p1.communicate()
-    p1.wait()
-    pysam.view('-Sb', '-@', num_threads,  output_file + '.sam', '-o', output_file + '.bam', catch_stdout=False)
-    
-    pysam.sort('-@',  num_threads, output_file + '.bam', '-o', output_file + '.sorted.bam', catch_stdout=False)
-    pysam.index(output_file + '.sorted.bam', catch_stdout=False)
-    os.remove(output_file + '.sam')
-    os.remove(output_file + '.bam')
+    command = ['samtools', 'view', '-Sb', '-@', num_threads, '-o', output_file + '.bam', '-']
+    p1 = subprocess.Popen(bwacommand, stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(command, stdin=p1.stdout, stdout=subprocess.PIPE)  # pipe bwa output to samtools view
+    p2.communicate()
+    p1.stdout.close()
+    command = ['samtools', 'sort', '-@',  num_threads, output_file + '.bam', '-o', output_file + '.sorted.bam']
+    p = subprocess.Popen(command, stdout=subprocess.PIPE)
+    p.communicate()
+    p.wait()
+    command = ['samtools', 'index', output_file + '.sorted.bam']
+    p = subprocess.Popen(command, stdout=subprocess.PIPE)
+    p.communicate()
+    p.wait()
     return(output_file + '.sorted.bam')
 
 

@@ -62,14 +62,16 @@ def run_unpigz(filename, tmpdir, num_threads):
     with open(outfilename, 'w') as g:
         p = subprocess.Popen(command, stdout=g)
         p.communicate()
+        p.wait()
     return(outfilename)
 
 
 def run_pigz(filename, num_threads):
     '''Zip the new fastq files with parallel gzip (pigz).'''
     command = ['pigz', '-p', num_threads, filename]
-    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(command, stdout=subprocess.PIPE)
     p.communicate()
+    p.wait()
 
 
 def get_sample_name(read1, mode):
