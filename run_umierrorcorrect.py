@@ -43,7 +43,8 @@ def parseArgs():
     group3.add_argument('-p', '--position_threshold', dest='position_threshold', help='Position threshold for grouping by position [default = %(default)s]', default=10)
     
     group4 = parser.add_argument_group('Consensus options')
-    group4.add_argument('-indel_freq', '--indel_frequency_threshold', dest='indel_frequency_threshold', help='Percent threshold for indels to be included in the consensus read. [default = %(default)s]', default=75.0)
+    group4.add_argument('-cons_freq', '--consensus_frequency_threshold', dest='consensus_frequency_threshold', help='Minimum percent of the majority base at a position for consensus to be called. [default = %(default)s]', default=60.0)
+    group4.add_argument('-indel_freq', '--indel_frequency_threshold', dest='indel_frequency_threshold', help='Percent threshold for indels to be included in the consensus read. [default = %(default)s]', default=60.0)
     group4.add_argument('-singletons', '--include_singletons', dest='include_singletons', action='store_true', help='Include this flag if singleton reads should be included in the output consensus read bam file. Note that the singletons will not be error corrected')
     
     group5 = parser.add_argument_group('Running parameters')

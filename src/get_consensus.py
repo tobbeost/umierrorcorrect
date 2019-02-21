@@ -64,11 +64,14 @@ class consensus_read:
 
 
 def get_reference_sequence(fasta, chrx, start, stop):
+    '''Returns the fasta sequence of the reference for a given region'''
     ref = fasta.fetch(chrx, start, stop).upper()
     return(ref)
 
 
 def get_most_common_allele(cons_pos):
+    '''Calculate the allele frequencies at one position and returns the 
+       allele with the highest frequency.'''
     cons_dict = {}
     for x, y in cons_pos.items():
         if x in 'ID':
@@ -81,74 +84,20 @@ def get_most_common_allele(cons_pos):
     return(cons_allele, cons_percent)
 
 
-# def get_consensus_seq2(position_matrix):
-#     consensus_sequences = {}
-#     for barcode in position_matrix:
-#         consread = consensus_read('17', list(position_matrix[barcode].keys())[0])
-#         for pos in position_matrix[barcode]:
-#             if 'I' in position_matrix[barcode][pos] or 'D' in position_matrix[barcode][pos]:
-#                 cons_allele, cons_percent = get_most_common_allele(position_matrix[barcode][pos])
-#                 if cons_allele in 'ID':
-#                     if cons_percent >= 50.0:
-#                         consread.add_base(cons_allele, get_ascii(60))
-#                         consread.indel(cons_allele)
-#                     else:
-#                         consread.add_base('N', get_ascii(0))
-#                 else:
-#                     cons_base,cons_qual = calc_consensus_probabilities(position_matrix[barcode][pos])
-#                     consread.add_base(cons_base, get_ascii(cons_qual))
-#             else:
-#                 cons_base,cons_qual=calc_consensus_probabilities(position_matrix[barcode][pos])
-#                 consread.add_base(cons_base,get_ascii(cons_qual))
-#         consensus_sequences[barcode]=consread
-#     return(consensus_sequences)
-
-# def check_if_match(read,ref):
-#     if read==ref:
-#         return('{}M'.format(len(read)))
-#     else:
-#         return('X')
-#
-# def get_cigar_string(cons,ref):
-#     cons_sequence=''.join(cons.values())
-#     cons_sequence=cons
-#     if not 'D' in cons_sequence and not 'I' in cons_sequence:
-#     if 'D' in cons_sequence:
-#         parts=cons_sequence.split('D')
-#         counter=0
-#         dellength=1
-#         cigar=''
-#         for part in parts:
-#             if part not in '':
-#                 cigar=cigar+'{}D'.format(dellength)
-#                 dellength=1
-#                 cigar=cigar+'{}M'.format(len(part))
-#                 counter=counter+len(part)+1
-#             else:
-#                 counter+=1
-#                 dellength+=1
-#     cigar=cigar[2:]
-#     return(cigar)
-#
-#
-#     else:
-#         if cons_sequence==ref:
-#             return('{}M'.format(len(cons)))
-#         else:
-
-
 def get_phred(character):
-    '''Returns the numeric value of ASCII character associated with phred score (offset 33)'''
+    '''Get the numeric value of ASCII character associated with phred score (offset 33)'''
     value = ord(character) - 33
     return(value)
 
 
 def get_ascii(value):
+    '''Get the ascii character for a given phred score (offset 33)'''
     ascii_letter = chr(value + 33)
     return(ascii_letter)
 
 
 def calc_consensus(base, cons_pos):
+    '''Function for calculating the combined score for a base at a position'''
     prod = 1
     for nucl in cons_pos:
         if nucl in base:
@@ -161,6 +110,8 @@ def calc_consensus(base, cons_pos):
 
 
 def calc_consensus_probabilities(cons_pos):
+    '''Function for calculating the probability of consensus at a given position
+       Return the base with the highest probability'''
     p = {base: calc_consensus(base, cons_pos) for base in 'ATCG'}
     denom = sum(p.values())
     if denom > 0:
@@ -177,63 +128,7 @@ def calc_consensus_probabilities(cons_pos):
     return(cons_base, cons_phred)
 
 
-# def get_consensus(bamfilename, umis, family_sizes, ref_seq):
-#     consensus_sequence = {}
-#     for fs in family_sizes:
-#         consensus_sequence[fs] = {}
-#     position_matrix = {}
-#     singleton_matrix = {}
-#     with pysam.AlignmentFile(bamfilename, 'rb') as f:
-#         alignment = f.pileup('17', 7577497, 7577600,max_depth=1000000)
-#         n=0
-#         clustlist=['GCACCCGCGCCC','GCACCCGCGCAC','GCACCCGGGCCC']
-#         for pileupcolumn in alignment:
-#             pos=pileupcolumn.pos
-#             #ref_base=ref_seq[pos-7577497]
-#             #print(pos)
-#             for read in pileupcolumn.pileups:
-#                 barcode=read.alignment.qname.split(':')[-1]
-#                 #if barcode in clustlist and pos==7577513:
-#                 #    n+=1
-#                 cluster=umis[barcode].centroid
-#                 cluster_size=umis[barcode].count
-#                 if cluster_size > 1:
-#                     if not read.is_del and not read.indel:
-#                         q=get_phred(read.alignment.qual[read.query_position])
-#                         al=read.alignment.query_sequence[read.query_position]
-#                         if cluster in 'CATGGCGAGCCT' and pos==7577503:
-#                             print(allele)
-#                             print(barcode)
-#                             print(cluster)
-#                             n+=1
-#                     elif read.indel>0: #insertion
-#                         #print(read.indel)
-#                         al='I'+read.alignment.query_sequence[read.query_position:read.query_position+abs(read.indel)+1]
-#                         q=get_phred(read.alignment.qual[read.query_position])
-#                         #al=read.alignment.query_sequence[read.query_position:read.query_position+abs(read.indel)+1]
-#                     elif read.indel<0: #deletion
-#                         #print(read.indel)
-#                         #al=read.alignment.query_sequence[read.query_position+1]
-#                         #ref_base=ref_seq[(pos-7577497):(pos-7577497)+abs(read.indel)]
-#                         al='D'+str(abs(read.indel))
-#                         q=get_phred(read.alignment.qual[read.query_position])
-#                     if cluster not in position_matrix:
-#                         position_matrix[cluster]={}
-#                     if pos not in position_matrix[cluster]:
-#                         position_matrix[cluster][pos]={}
-#                     #allele=(ref_base,al)
-#                     allele=al
-#                     if allele not in position_matrix[cluster][pos]:
-#                         position_matrix[cluster][pos][allele]=[]
-#                     position_matrix[cluster][pos][allele].append(q)
-#                 else:
-#                     if cluster not in singleton_matrix:
-#                         singleton_matrix[cluster]=read
-#    print(n)
-#    return(position_matrix,singleton_matrix)
-
-
-def getConsensus3(group_seqs, contig, regionid, indel_freq_threshold, umi_info):
+def getConsensus3(group_seqs, contig, regionid, indel_freq_threshold, umi_info, consensus_freq_threshold):
     '''Takes a list of pysam entries (rows in the BAM file) as input and generates a consensus sequence.'''
     consensus = {}
     for read in group_seqs:
@@ -301,15 +196,12 @@ def getConsensus3(group_seqs, contig, regionid, indel_freq_threshold, umi_info):
                         consensus[refpos][base].append(get_phred(qual[qpos]))
                     q = qpos
                     ref = refpos
-            # curr_index=0
-            # for typex,num_bases in read.cigar:
-            #     if typex==0:
-            #         for i in range(curr_index,curr_index+num_bases):
-            #             print(readdict[i])
-            # print(read.to_string())#consensusseq={}
+    
     if len(consensus) > 0:
+        #generate the consensus sequence
         consensus_sorted = sorted(consensus)
         consread = consensus_read(contig, regionid, consensus_sorted[0], umi_info.centroid, umi_info.count)
+        add_consensus = True
         for pos in sorted(consensus_sorted):
             if 'I' in consensus[pos]:
                 # first add the insertion if it is in the majority of the reads, then add the base at the next position
@@ -333,38 +225,44 @@ def getConsensus3(group_seqs, contig, regionid, indel_freq_threshold, umi_info):
                         consread.add_deletion(dellength)
                     else:
                         consread.add_base('N', get_ascii(0))
+                        add_consensus = False
                 elif percent >= indel_freq_threshold:
                     cons_base, cons_qual = calc_consensus_probabilities(consensus[pos])
                     consread.add_base(cons_base, get_ascii(cons_qual))
                 else:
                     consread.add_base('N', get_ascii(0))
+                    add_consensus = False
             else:
+                #no indel
                 cons_base, cons_qual = calc_consensus_probabilities(consensus[pos])
-                consread.add_base(cons_base, get_ascii(cons_qual))
-
-        return(consread)
+                if consensus_freq_threshold: #test if not None
+                    if len(consensus[pos]) == 1:  #100%
+                        consread.add_base(cons_base, get_ascii(cons_qual))
+                    else:
+                        percent = (len(consensus[pos][cons_base]) / len(group_seqs))*100.0
+                        if percent >= consensus_freq_threshold: #consensus frequency above threshold
+                            consread.add_base(cons_base, get_ascii(cons_qual))
+                        else:
+                            consread.add_base('N', get_ascii(0))
+                            add_consensus = False
+                else:
+                    consread.add_base(cons_base, get_ascii(cons_qual))
+        if add_consensus:
+            return(consread)
+        else:
+            #print(umi_info.centroid,umi_info.count)
+            return(None)
     else:
         return(None)
 
-    #    for position in consensus:
-    #     if len(consensus[position])==1: #only one option
-    #         consensusseq[position]=list(consensus[position].keys())[0]
-    #     else:
-    #         cons_allele = max(consensus[position], key = consensus[position].get)
-    #         cons_denom = sum(consensus[position].values())
-    #         cons_percent = (consensus[position][cons_allele]/sum(consensus[position].values())) * 100
-    #         if cons_percent>=freq_cutoff:
-    #             consensusseq[position]=cons_allele
-    #         else:
-    #             consensusseq=None
-    #             break
-    # return(consensusseq)
 
-
-def get_all_consensus(position_matrix, umis, contig, regionid, indel_frequency_cutoff):
+def get_all_consensus(position_matrix, umis, contig, regionid, indel_frequency_cutoff, consensus_frequency_cutoff):
+    '''Get the consensus sequences for all umis'''
     consensuses = {}
     for umi in position_matrix:
-        consensuses[umi] = getConsensus3(position_matrix[umi], contig, regionid, indel_frequency_cutoff, umis[umi])
+        consensuses[umi] = getConsensus3(position_matrix[umi], contig, regionid, 
+                                         indel_frequency_cutoff, umis[umi],
+                                         consensus_frequency_cutoff)
     return(consensuses)
 
 
