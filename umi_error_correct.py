@@ -55,12 +55,12 @@ def get_sample_name(bamfile):
 
 
 def cluster_consensus_worker(args):
-    umi_dict, tmpfilename, regionid, contig, start, end,  edit_distance_threshold, bamfilename, include_singletons, annotations, fasta, indel_frequency_cutoff = args
+    umi_dict, tmpfilename, regionid, contig, start, end, edit_distance_threshold, bamfilename, include_singletons, annotations, fasta, indel_frequency_cutoff, consensus_frequency_cutoff = args
     adj_matrix = cluster_barcodes(umi_dict, edit_distance_threshold)
     clusters = get_connected_components(umi_dict, adj_matrix)
     umis = merge_clusters(umi_dict, clusters)
     position_matrix, singleton_matrix = get_cons_dict(bamfilename, umis, contig, start, end, True)  # include_singletons=True
-    consensus_seq = get_all_consensus(position_matrix, umis, contig, regionid, indel_frequency_cutoff)
+    consensus_seq = get_all_consensus(position_matrix, umis, contig, regionid, indel_frequency_cutoff, consensus_frequency_cutoff)
     outfilename = tmpfilename
     with pysam.AlignmentFile(bamfilename, 'rb') as f, pysam.AlignmentFile(outfilename, 'wb', template=f) as g:
         for cons_read in consensus_seq.values():
@@ -140,7 +140,9 @@ def merge_stat(output_path, statfilelist, sample_name):
         os.remove(filename)
 
 
-def cluster_umis_all_regions(regions, ends, edit_distance_threshold, bamfilename, output_path, include_singletons, fasta, bedregions, num_cpus, indel_frequency_cutoff):
+def cluster_umis_all_regions(regions, ends, edit_distance_threshold, bamfilename, output_path, 
+                             include_singletons, fasta, bedregions, num_cpus, 
+                             indel_frequency_cutoff, consensus_frequency_cutoff):
     argvec = []
     bamfilelist = []
     i = 0
@@ -152,7 +154,10 @@ def cluster_umis_all_regions(regions, ends, edit_distance_threshold, bamfilename
                 annotations = []
             # endpos = list(regions[contig][pos].keys())[-1]
             tmpfilename = '{}/tmp_{}.bam'.format(output_path, i)
-            argvec.append((regions[contig][pos], tmpfilename, int(i), contig, int(pos), int(ends[contig][pos]), int(edit_distance_threshold), bamfilename, include_singletons, annotations, fasta, int(indel_frequency_cutoff)))
+            argvec.append((regions[contig][pos], tmpfilename, int(i), contig, int(pos), 
+                           int(ends[contig][pos]), int(edit_distance_threshold), bamfilename,
+                           include_singletons, annotations, fasta, int(indel_frequency_cutoff),
+                           consensus_frequency_cutoff))
             bamfilelist.append('{}/tmp_{}.bam'.format(output_path, i))
             i += 1
 
@@ -188,7 +193,8 @@ def run_umi_errorcorrect(args):
         args.sample_name = get_sample_name(args.bam_file)
     print(args.bam_file)
     print(args.sample_name)
-    regions, ends = cluster_umis_on_position(args.bam_file, args.position_threshold, group_method, args.bed_file)
+    regions, ends = cluster_umis_on_position(args.bam_file, args.position_threshold, 
+                                             group_method, args.bed_file)
     nregions = 0
     for chrx in regions:
         nregions += len(regions[chrx])
@@ -203,7 +209,11 @@ def run_umi_errorcorrect(args):
     bedregions = read_bed(args.bed_file)
     bedregions = sort_regions(bedregions)
     bedregions = merge_regions(bedregions, 0)
-    bamfilelist = cluster_umis_all_regions(regions, ends, edit_distance_threshold, args.bam_file, args.output_path, args.include_singletons, fasta, bedregions, num_cpus, args.indel_frequency_threshold)
+    bamfilelist = cluster_umis_all_regions(regions, ends, edit_distance_threshold, 
+                                           args.bam_file, args.output_path, 
+                                           args.include_singletons, fasta, bedregions, 
+                                           num_cpus, args.indel_frequency_threshold, 
+                                           args.consensus_frequency_threshold)
     merge_bams(args.output_path, bamfilelist, args.sample_name)
     consfilelist = [x.rstrip('.bam') + '.cons' for x in bamfilelist]
     merge_cons(args.output_path, consfilelist, args.sample_name)
