@@ -13,7 +13,7 @@ Preprocess the fastq files by removing the unique molecular index and add it to 
 '''
 import sys
 import gzip
-from src.handle_sequences import read_fastq, read_fastq_paired_end
+from umierrorcorrect.src.handle_sequences import read_fastq, read_fastq_paired_end
 import argparse
 import os
 import logging
