@@ -58,6 +58,15 @@ def get_annotation(regions, pos):
         return("")
 
 
+def get_overlap(annotation_regions, start, end):
+    for annotation_start, annotation_end, annotation_name in annotation_regions:
+        if annotation_start <= end and start <= annotation_end:  # test for overlap
+            return(annotation_name)
+            break
+    else:
+        return("")
+
+
 def main(bedfile):
     regions = read_bed(bedfile)
     regions = sort_regions(regions)

@@ -3,7 +3,7 @@ from umierrorcorrect.src.group import readBam, read_bam_from_bed
 from umierrorcorrect.src.umi_cluster import cluster_barcodes, get_connected_components, merge_clusters
 from umierrorcorrect.src.get_consensus import get_cons_dict, get_all_consensus, write_singleton_reads, get_reference_sequence
 from umierrorcorrect.src.get_cons_info import get_cons_info, write_consensus
-from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, merge_regions
+from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, merge_regions, get_overlap
 import sys
 import os
 import pysam
@@ -94,10 +94,12 @@ def cluster_consensus_worker(args):
     outfilename = tmpfilename
     
     #Write consensus reads (and singletons) to a BAM file
+    num_cons=0
     with pysam.AlignmentFile(bamfilename, 'rb') as f, pysam.AlignmentFile(outfilename, 'wb', template=f) as g:
         for cons_read in consensus_seq.values():
             if cons_read:
                 cons_read.write_to_bam(g)
+                num_cons+=1
         if include_singletons:
             write_singleton_reads(singleton_matrix, contig, g)
     
@@ -117,8 +119,9 @@ def cluster_consensus_worker(args):
         g.close()
     #Write to hist/stat file
     with open(statfilename, 'w') as g2:
-        regionname = '{}:{}-{}'.format(contig, start, end)
-        g2.write('\t'.join([str(regionid), regionname, 
+        name=get_overlap(annotations, start, endpos)
+        regionname = '{}:{}-{}'.format(contig, start, endpos)
+        g2.write('\t'.join([str(regionid), regionname, name, 'consensus_reads: ' + str(num_cons),  
                             'singletons: ' + str(len(singleton_matrix))]) + '\n')
 
 
