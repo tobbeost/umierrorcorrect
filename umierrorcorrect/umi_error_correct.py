@@ -101,7 +101,7 @@ def cluster_consensus_worker(args):
                 cons_read.write_to_bam(g)
                 num_cons+=1
         if include_singletons:
-            write_singleton_reads(singleton_matrix, contig, g)
+            write_singleton_reads(singleton_matrix, regionid, g)
     
     #Generate info for cons file
     cons = get_cons_info(consensus_seq, singleton_matrix)
@@ -140,7 +140,6 @@ def merge_bams(output_path, bamfilelist, sample_name):
     for filename in bamfilelist:
         os.remove(filename)
 
-
 def merge_cons(output_path, consfilelist, sample_name):
     '''Merge all cons files in consfilelist and remove temporary files.'''
     with open(output_path + '/' + sample_name + '.cons', 'w') as g:
@@ -165,6 +164,14 @@ def merge_stat(output_path, statfilelist, sample_name):
 
     for filename in statfilelist:
         os.remove(filename)
+
+
+def index_bam_file(filename, include_singletons=False, num_threads=1):
+    '''Index the consensus reads bam file'''
+    if include_singletons:  # if singletons are included the file is not sorted
+        pysam.sort('-@',  num_threads, filename, '-o', filename + '.sorted', catch_stdout=False)
+        os.rename(filename + '.sorted', filename)
+    pysam.index(filename, catch_stdout=False)
 
 
 def cluster_umis_all_regions(regions, ends, edit_distance_threshold, bamfilename, output_path, 
@@ -243,6 +250,8 @@ def run_umi_errorcorrect(args):
                                            num_cpus, args.indel_frequency_threshold, 
                                            args.consensus_frequency_threshold)
     merge_bams(args.output_path, bamfilelist, args.sample_name)
+    index_bam_file(args.output_path + '/' + args.sample_name + '_consensus_reads.bam',
+              args.include_singletons, args.num_threads)
     consfilelist = [x.rstrip('.bam') + '.cons' for x in bamfilelist]
     merge_cons(args.output_path, consfilelist, args.sample_name)
     statfilelist = [x.rstrip('.bam') + '.hist' for x in bamfilelist]

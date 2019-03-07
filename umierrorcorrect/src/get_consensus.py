@@ -300,9 +300,9 @@ def get_cons_dict(bamfilename, umis, contig, start, end, include_singletons):
     return(position_matrix, singleton_matrix)
 
 
-def write_singleton_reads(singleton_matrix, contig, g):
+def write_singleton_reads(singleton_matrix, region_id, g):
     for umi, read in singleton_matrix.items():
-        read.query_name = 'Singleton_read_{}_{}_Count=1'.format(contig, umi)
+        read.query_name = 'Singleton_read_{}_{}_Count=1'.format(region_id, umi)
         g.write(read)
 
 
