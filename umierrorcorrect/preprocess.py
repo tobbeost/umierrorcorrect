@@ -121,7 +121,6 @@ def preprocess_se(infilename, outfilename, barcode_length, spacer_length):
     except ValueError as e:
         logging.warning(e + " Spacer length needs to be an integer")
         sys.exit(1)
-    print(infilename,outfilename)
     with open(infilename) as f, open(outfilename, 'w') as g:
         read_start = barcode_length + spacer_length
         for name, seq, qual in read_fastq(f):
@@ -144,7 +143,6 @@ def preprocess_pe(r1file, r2file, outfile1, outfile2, barcode_length, spacer_len
     except ValueError as e:
         logging.warning(e + " Spacer length needs to be an integer")
         sys.exit(1)
-    print(r1file, r2file)
     read_start = barcode_length + spacer_length
     with open(r1file) as f1, open(r2file) as f2, open(outfile1, 'w') as g1, open(outfile2, 'w') as g2:
         for name1, seq1, qual1, name2, seq2, qual2 in read_fastq_paired_end(f1, f2):
@@ -165,7 +163,9 @@ def preprocess_pe(r1file, r2file, outfile1, outfile2, barcode_length, spacer_len
 
 def run_preprocessing(args):
     '''Start preprocessing.'''
-    logging.info("Start preprocessing")
+    if not args.sample_name:
+        args.sample_name = get_sample_name(args.read1, args.mode)
+    logging.info("Start preprocessing of sample {}".format(args.sample_name))
     args.output_path = check_output_directory(args.output_path)  # check if output path exists
     if args.mode == 'paired':
         if not args.read2:
@@ -184,12 +184,8 @@ def run_preprocessing(args):
         r1file = run_unpigz(args.read1, newtmpdir, args.num_threads)
 
     logging.info('Writing output files to {}'.format(args.output_path))
-    if not args.sample_name:
-        args.sample_name = get_sample_name(args.read1, args.mode)
     if args.mode == 'single':
         outfilename = args.output_path + '/' + args.sample_name + '_umis_in_header.fastq'
-        #print(r1file)
-        #print(outfilename)
         preprocess_se(r1file, outfilename, args.umi_length, args.spacer_length)
         run_pigz(outfilename, args.num_threads)
         os.remove(r1file)

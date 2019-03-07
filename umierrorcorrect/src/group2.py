@@ -5,20 +5,6 @@ from collections import Counter
 from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, merge_regions
 
 
-# class Region:
-#     def __init__(self, pos):
-#         self.start = pos
-#         self.end = pos
-#     def is_inside(self, pos, pos_threshold):
-#     if pos > self.start - pos_threshold and pos < self.end + pos_threshold:
-#             if pos < self.start:
-#                 self.start = pos
-#             if pos > self.end:
-#                 self.end = pos
-#             return(True)
-#         else:
-#             return(False)
-
 def get_chromosome_list_from_bam(f):
     contiglist = []
     for chrx in f.get_index_statistics():
@@ -34,44 +20,24 @@ def group_by_position(f, chrx, pos_threshold):
     current_pos = -pos_threshold
  
     current_end = -(2*pos_threshold) + 1
-    # current_aend=-pos_threshold
+    
     for line in reads:
         pos = line.pos
         if pos > current_end + pos_threshold:
             # new region
-            #print(pos)
             if pos != -pos_threshold:
                 ends[current_pos] = current_end + 1
             current_pos = pos
             current_end = pos
-            # current_aend = line.reference_end
             regions[pos] = Counter()
             barcode = line.qname.split(':')[-1]
-            # if barcode not in regions[current_pos]:
-            #     regions[current_pos][barcode]=0
             regions[current_pos][barcode] += 1
         else:
             barcode = line.qname.split(':')[-1]
-            # if barcode not in regions[current_pos]:
-            #     regions[current_pos][barcode]=0
-            #print(pos)
             regions[current_pos][barcode] += 1
             current_end = pos
-            # aend=line.reference_end
-            # if aend > current_aend:
-            #     current_aend = aend
     ends[current_pos] = current_end + 1
     return(regions, ends)
-    # if len(regions)==0:
-    #     r=Region(pos)
-    #     regions.append(r)
-    # else:
-    #     for rr in regions:
-    #         if not rr.is_inside(pos,10):
-    #             #new region
-    #             rnew=Region(pos)
-    # for rr in regions:
-#     print(rr.start,rr.end)
 
 
 def count_umis_in_region(f, chrx, pos_start, pos_end):

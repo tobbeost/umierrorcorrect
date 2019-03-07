@@ -218,47 +218,9 @@ def write_consensus(f, cons, ref_seq, start, contig, annotation, only_target_reg
                 f.write('\t'.join(line) + '\n')
 
 
-# def get_all_consensus(position_matrix, umis, contig):
-#     consensuses={}
-#     for umi in position_matrix:
-#         consensuses[umi] = getConsensus3(position_matrix[umi], contig, 50.0, umis[umi])
-#     return(consensuses)
-
-
-# def get_cons_dict(bamfilename, umis, contig, start, end, include_singletons):
-#     # print('{}:{}-{}'.format(contig,start,end))
-#     position_matrix={}
-#     singleton_matrix={}
-#     with pysam.AlignmentFile(bamfilename,'rb') as f:
-#         alignment=f.fetch(contig,start,end)
-#         for read in alignment:
-#             barcode=read.qname.split(':')[-1]
-#             pos=read.pos
-#             if pos>=start and pos <=end:
-#             #if barcode not in ['ATGGGGGGGGGG','TCGGGGGGGGGG','TAGGGGGTGGGG','TAGGGGGGGGGG']:
-#             #    print('{}:{}-{}'.format(contig,start,end))
-#             #    for u in umis:
-#             #        print(u, umis[u].centroid, umis[u].count)
-#                 cluster=umis[barcode].centroid
-#                 cluster_size=umis[barcode].count
-#                 if cluster_size>1:
-#                     if cluster not in position_matrix:
-#                         position_matrix[cluster]=[]
-#                     position_matrix[cluster].append(read)
-#                 elif include_singletons:
-#                     if cluster not in singleton_matrix:
-#                         singleton_matrix[cluster]=read
-#     return(position_matrix,singleton_matrix)
-#
-# def write_singleton_reads(singleton_matrix,contig,g):
-#     for umi,read in singleton_matrix.items():
-#         read.query_name='Singleton_read_{}_{}_Count=1'.format(contig,umi)
-#         g.write(read)
-
 def main(bamfilename, bedfilename):
     with open('/home/xsteto/umierrorcorrect/umi.pickle', 'rb') as f:
         umis = pickle.load(f)
-    # family_sizes = [0,1,2,3,4,5,7,10,20,30]
     fasta = pysam.FastaFile('/medstore/External_References/hg19/Homo_sapiens_sequence_hg19.fasta')
     ref_seq = get_reference_sequence(fasta, '17', 7577495, 7577800)
     contig = '17'
@@ -273,28 +235,6 @@ def main(bamfilename, bedfilename):
     annotation = regions[contig]
     with open('out/cons.out', 'w') as f:
         write_consensus(f, cons, ref_seq, start, contig, annotation, False)
-    # with pysam.AlignmentFile(bamfilename,'rb') as f, pysam.AlignmentFile('consensus_out.bam','wb',template=f) as g:
-
-    #    for cons_read in consensus_seq.values():
-    #        if cons_read:
-    #            cons_read.write_to_bam(g)
-    #    write_singleton_reads(singleton_matrix,'17',g)
-
-    # print(seqs)
-    # consensus_seq=get_consensus_seq2(position_matrix)
-    # print(position_matrix['CATGGCGAGCAT'])
-    # print(umis['CATGGCGAGCCT'].count)
-
-    #    if not consensus_seq[k]:
-    #        print(None)
-    #    else:
-    #        print('@'+k+'_'+str(umis[k].count)+'_'+str(consensus_seq[k].start_pos)+'\n'+consensus_seq[k].seq+'\n+\n'+consensus_seq[k].qual)
-    # fasta.close()
-    # for k in singleton_matrix:
-    #     print(k, umis[k].count, singleton_matrix[k].alignment.qname)
-
-    # print(position_matrix['GCACCCGCGCAC'])
-    # print(position_matrix['GCACCCGGGCCC'])
 
 
 if __name__ == '__main__':

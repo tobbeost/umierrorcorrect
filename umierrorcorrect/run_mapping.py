@@ -88,4 +88,3 @@ if __name__ == '__main__':
         args.sample_name = get_sample_name(args.read1, mode)
 
     bamfile=run_mapping(args.num_threads, args.reference_file, fastq_files, args.output_path, args.sample_name)
-    print(bamfile)
