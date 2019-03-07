@@ -21,7 +21,7 @@ run_umierrorcorrect.py -h
 Dependencies
 ------------
 
-Umi-errorcorrect requires the following programs/libraries to be installed:
+Umi-errorcorrect runs using Python and  requires the following programs/libraries to be installed:
 
 Python-libraries (should be installed automatically):
 
@@ -30,7 +30,6 @@ Python-libraries (should be installed automatically):
 External programs:
 
     bwa (bwa mem command is used)
-    samtools
     pigz
 
 Install the external programs and add them to the path.
@@ -50,4 +49,18 @@ The ``run_umierrorcorrect.py`` pipeline performs the following steps:
 - Perform UMI clustering, then error correcion of each UMI cluster
 - Create consensus reads (one representative read per UMI cluster written to a BAM file)
 - Create a consensus output file (collapsed counts per position)
+
+It is also to possible to run the pipeline step-by-step.
+
+To see the options for each step, type the following:
+
+```bash
+preprocess.py -h
+run_mapping.py -h
+umi_error_correct.py -h
+get_consensus_statistics.py -h
+filter_bam.py -h
+filter_cons.py -h
+```
+
 
