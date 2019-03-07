@@ -21,20 +21,46 @@ import subprocess
 
 
 def parseArgs():
-    parser = argparse.ArgumentParser(description="Pipeline for analyzing  barcoded amplicon sequencing data with Unique molecular identifiers (UMI)")
-    parser.add_argument('-o', '--output_path', dest='output_path', help='Path to the output directory, required', required=True)
-    parser.add_argument('-r1', '--read1', dest='read1', help='Path to first FASTQ file, R1, required', required=True)
+    parser = argparse.ArgumentParser(description="Pipeline for analyzing  barcoded amplicon sequencing data with \
+                                                  Unique molecular identifiers (UMI)")
+    parser.add_argument('-o', '--output_path', dest='output_path', help='Path to the output directory, required', 
+                         required=True)
+    parser.add_argument('-r1', '--read1', dest='read1', help='Path to first FASTQ file, R1, required', 
+                         required=True)
     parser.add_argument('-r2', '--read2', dest='read2', help='Path to second FASTQ file, R2 if applicable')
-    parser.add_argument('-ul', '--umi_length', dest='umi_length', help='Length of UMI sequence (number of nucleotides). The UMI is assumed to be located at the start of the read. Required', required=True)
-    parser.add_argument('-sl', '--spacer_length', dest='spacer_length', help='Length of spacer (The number of nucleotides between the UMI and the beginning of the read). The UMI + spacer will be trimmed off, and the spacer will be discarded. Default=%(default)s', default='0')
-    parser.add_argument('-mode', '--mode', dest='mode', help="Name of library prep, Either 'single' or 'paired', for single end or paired end data respectively, [default = %(default)s]", default="paired")
-    parser.add_argument('-dual', '--dual_index', dest='dual_index', help='Include this flag if dual indices are used (UMIs both on R1 and R2)', action='store_true')
-    parser.add_argument('-reverse', '--reverse_index', dest='reverse_index', help="Include this flag if a single index (UMI) is used, but the UMI is located on R2 (reverse read). Default is UMI on R1.", action='store_true')
-    parser.add_argument('-s', '--sample_name', dest='sample_name', help='Sample name which is used as base name for the output files. If excluded the sample name is automatically extracted from the name of the fastq file(s).')
-    parser.add_argument('-tmpdir', '--tmp_dir', dest='tmpdir', help="temp directory where the temporary files are written and then removed. Should be the scratch directory on the node. Default is a temp directory in the output folder.")
-    parser.add_argument('-cs', '--chunk_size', dest='chunksize', help="Chunk size for reading the fastq files in chunks. Only used if num_threads > 1. [default = %(default)i]", default=25000)
-    parser.add_argument('-t', '--num_threads', dest='num_threads', help='Number of threads to run the program on. Default=%(default)s', default='1')
+    parser.add_argument('-ul', '--umi_length', dest='umi_length', 
+                        help='Length of UMI sequence (number of nucleotides).  \
+                              The UMI is assumed to be located at the start of \
+                              the read. Required', required=True)
+    parser.add_argument('-sl', '--spacer_length', dest='spacer_length', 
+                        help='Length of spacer (The number of nucleotides between the UMI and the beginning of the read). \
+                              The UMI + spacer will be trimmed off, and the spacer will be discarded. Default=%(default)s', 
+                              default='0')
+    parser.add_argument('-mode', '--mode', dest='mode', 
+                        help="Name of library prep, Either 'single' or 'paired', for single end or paired end data \
+                              respectively, [default = %(default)s]", default="paired")
+    parser.add_argument('-dual', '--dual_index', dest='dual_index', 
+                        help='Include this flag if dual indices are used (UMIs both on R1 and R2)', 
+                        action='store_true')
+    parser.add_argument('-reverse', '--reverse_index', dest='reverse_index', 
+                        help="Include this flag if a single index (UMI) is used, but the UMI is located on R2 \
+                              (reverse read). Default is UMI on R1.", action='store_true')
+    parser.add_argument('-s', '--sample_name', dest='sample_name', 
+                        help='Sample name which is used as base name \
+                              for the output files. If excluded the sample name is automatically extracted from the \
+                              name of the fastq file(s).')
+    parser.add_argument('-tmpdir', '--tmp_dir', dest='tmpdir', 
+                        help="temp directory where the temporary files are written and then removed. Should be the \
+                              scratch directory on the node. Default is a temp directory in the output folder.")
+    parser.add_argument('-cs', '--chunk_size', dest='chunksize', 
+                        help="Chunk size for reading the fastq files in chunks. Only used if num_threads > 1. \
+                              [default = %(default)i]", default=25000)
+    parser.add_argument('-t', '--num_threads', dest='num_threads', 
+                        help='Number of threads to run the program on. Default=%(default)s', default='1')
     args = parser.parse_args(sys.argv[1:])
+    logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
+    logging.info('Starting UMI Error Correct')
+
     return(args)
 
 
@@ -139,8 +165,7 @@ def preprocess_pe(r1file, r2file, outfile1, outfile2, barcode_length, spacer_len
 
 def run_preprocessing(args):
     '''Start preprocessing.'''
-    logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
-    logging.info('Starting UMI Error Correct')
+    logging.info("Start preprocessing")
     args.output_path = check_output_directory(args.output_path)  # check if output path exists
     if args.mode == 'paired':
         if not args.read2:
@@ -190,6 +215,7 @@ def run_preprocessing(args):
         os.remove(r2file)
         os.rmdir(newtmpdir)
         fastqfiles=[outfile1 + '.gz', outfile2 + '.gz']
+    logging.info("Finished preprocessing")
     return(fastqfiles)
 
 def main(args):

@@ -9,7 +9,7 @@ import os
 import pysam
 from multiprocessing import Pool, cpu_count
 import argparse
-
+import logging
 
 def parseArgs():
     '''Function for parsing arguments'''
@@ -52,7 +52,10 @@ def parseArgs():
                         help='Number of threads to run the program on. If excluded, the number of cpus are \
                         automatically detected')
     args = parser.parse_args(sys.argv[1:])
-    
+
+    logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
+    logging.info('Starting UMI Error Correct')
+
     return(args)
 
 
@@ -218,28 +221,30 @@ def cluster_umis_on_position(bamfilename, position_threshold, group_method, bedf
 
 def run_umi_errorcorrect(args):
     '''Run the umi clustering and consensus read generation (error correction)'''
+    logging.info("Starting UMI clustering")    
     args.output_path = check_output_directory(args.output_path)
     if args.regions_from_bed:
         group_method = 'fromBed'
     else:
         group_method = 'automatic'
-    print(group_method)
+
+    logging.info('Group by position method: {}'.format(group_method))
     if not args.sample_name:
         args.sample_name = get_sample_name(args.bam_file)
-    print(args.bam_file)
-    print(args.sample_name)
     regions, ends = cluster_umis_on_position(args.bam_file, args.position_threshold, 
                                              group_method, args.bed_file)
     nregions = 0
     for chrx in regions:
         nregions += len(regions[chrx])
-    print("Number of regions, ", nregions)
+    logging.info("Number of regions, {}".format(nregions))
+    
     edit_distance_threshold = args.edit_distance_threshold
     if args.num_threads:
         num_cpus = int(args.num_threads)
     else:
         num_cpus = int(cpu_count())
-    print(num_cpus)
+    logging.info("Starting Consensus sequence generation")
+    logging.info("Starting {} threads".format(num_cpus))
     fasta = args.reference_file
     bedregions = read_bed(args.bed_file)
     bedregions = sort_regions(bedregions)
@@ -256,6 +261,9 @@ def run_umi_errorcorrect(args):
     merge_cons(args.output_path, consfilelist, args.sample_name)
     statfilelist = [x.rstrip('.bam') + '.hist' for x in bamfilelist]
     merge_stat(args.output_path, statfilelist, args.sample_name)
+    logging.info("Consensus generation complete, output written to {}, {}".format(args.output_path + 
+                 '/' + args.sample_name + '_consensus_reads.bam',
+                 args.output_path + '/' + args.sample_name + '.cons'))
 
 def main(args):
     run_umi_errorcorrect(args)
