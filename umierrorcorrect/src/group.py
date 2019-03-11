@@ -1,8 +1,9 @@
-#!/usr/bin/env python4
+#!/usr/bin/env python3
 import sys
 import pysam
 from collections import Counter
-from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, merge_regions
+from umierrorcorrect.src.get_regions_from_bed import read_bed, \
+     sort_regions, merge_regions, expand_regions_from_bed
 
 
 # class Region:
@@ -128,6 +129,7 @@ def read_bam_from_bed(infile, bedfile, position_threshold):
     regions = read_bed(bedfile)
     regions = sort_regions(regions)
     regions = merge_regions(regions, position_threshold)
+    regions = expand_regions_from_bed(regions, infile)
     newregions = []
     for contig in regions:
         for a, b, c in regions[contig]:
