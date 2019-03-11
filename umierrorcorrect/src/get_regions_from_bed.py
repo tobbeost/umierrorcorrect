@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import sys
-
+import pysam
 
 def read_bed(bedfile):
     regions = {}
@@ -67,19 +67,39 @@ def get_overlap(annotation_regions, start, end):
         return("")
 
 
-def main(bedfile):
+def expand_regions_from_bed(regions, bamfile):
+    newregions={}
+    with pysam.AlignmentFile(bamfile,'rb') as f:
+        for contig in regions:
+            newregions[contig]=[]
+            for annotation_start, annotation_end, annotation_name in regions[contig]:
+                minpos = annotation_start
+                maxpos = annotation_end
+                reads = f.pileup(contig, annotation_start, annotation_end)
+                for pileupColumn in reads:
+                    for r in pileupColumn.pileups:
+                        pos=r.alignment.pos
+                        if pos < minpos:
+                            minpos = pos
+                        if pos > maxpos:
+                            maxpos = pos
+                newregions[contig].append((minpos, maxpos, annotation_name))
+    return(newregions)
+
+def main(bedfile,bamfile):
     regions = read_bed(bedfile)
     regions = sort_regions(regions)
     regions = merge_regions(regions, 0)
+    regions = expand_regions_from_bed(regions, bamfile)
     for c in regions:
         for r in regions[c]:
             r2 = tuple(str(x) for x in r)
             print(c, '\t'.join(r2))
     contig = '17'
     r = regions[contig]
-    for pos in range(7577497, 7577600):
+    for pos in range(7577077, 7577115):
         print(pos, get_annotation(r, pos))
 
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    main(sys.argv[1],sys.argv[2])
