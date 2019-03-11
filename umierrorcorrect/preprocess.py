@@ -14,6 +14,7 @@ Preprocess the fastq files by removing the unique molecular index and add it to 
 import sys
 import gzip
 from umierrorcorrect.src.handle_sequences import read_fastq, read_fastq_paired_end
+from umierrorcorrect.src.check_args import check_args_fastq
 import argparse
 import os
 import logging
@@ -36,9 +37,9 @@ def parseArgs():
                         help='Length of spacer (The number of nucleotides between the UMI and the beginning of the read). \
                               The UMI + spacer will be trimmed off, and the spacer will be discarded. Default=%(default)s', 
                               default='0')
-    parser.add_argument('-mode', '--mode', dest='mode', 
-                        help="Name of library prep, Either 'single' or 'paired', for single end or paired end data \
-                              respectively, [default = %(default)s]", default="paired")
+    #parser.add_argument('-mode', '--mode', dest='mode', 
+    #                    help="Name of library prep, Either 'single' or 'paired', for single end or paired end data \
+    #                          respectively, [default = %(default)s]", default="paired")
     parser.add_argument('-dual', '--dual_index', dest='dual_index', 
                         help='Include this flag if dual indices are used (UMIs both on R1 and R2)', 
                         action='store_true')
@@ -111,16 +112,6 @@ def get_sample_name(read1, mode):
 
 def preprocess_se(infilename, outfilename, barcode_length, spacer_length):
     '''Run the preprocessing for single end data (one fastq file).'''
-    try:
-        barcode_length = int(barcode_length)
-    except ValueError as e:
-        logging.warning(e + " Barcode length needs to be an integer")
-        sys.exit(1)
-    try:
-        spacer_length = int(spacer_length)
-    except ValueError as e:
-        logging.warning(e + " Spacer length needs to be an integer")
-        sys.exit(1)
     with open(infilename) as f, open(outfilename, 'w') as g:
         read_start = barcode_length + spacer_length
         for name, seq, qual in read_fastq(f):
@@ -133,16 +124,6 @@ def preprocess_se(infilename, outfilename, barcode_length, spacer_length):
 
 def preprocess_pe(r1file, r2file, outfile1, outfile2, barcode_length, spacer_length, dual_index):
     '''Run the preprocessing for paired end data (two fastq files).'''
-    try:
-        barcode_length = int(barcode_length)
-    except ValueError as e:
-        logging.warning(e + " Barcode length needs to be an integer")
-        sys.exit(1)
-    try:
-        spacer_length = int(spacer_length)
-    except ValueError as e:
-        logging.warning(e + " Spacer length needs to be an integer")
-        sys.exit(1)
     read_start = barcode_length + spacer_length
     with open(r1file) as f1, open(r2file) as f2, open(outfile1, 'w') as g1, open(outfile2, 'w') as g2:
         for name1, seq1, qual1, name2, seq2, qual2 in read_fastq_paired_end(f1, f2):
@@ -163,14 +144,8 @@ def preprocess_pe(r1file, r2file, outfile1, outfile2, barcode_length, spacer_len
 
 def run_preprocessing(args):
     '''Start preprocessing.'''
-    if not args.sample_name:
-        args.sample_name = get_sample_name(args.read1, args.mode)
     logging.info("Start preprocessing of sample {}".format(args.sample_name))
-    args.output_path = check_output_directory(args.output_path)  # check if output path exists
-    if args.mode == 'paired':
-        if not args.read2:
-            logging.warning("R1 and R2 Fastq files are required for mode 'paired', exiting.")
-            sys.exit(1)
+
     if args.tmpdir:
         newtmpdir = generate_random_dir(args.tmpdir)
     else:
@@ -215,6 +190,11 @@ def run_preprocessing(args):
     return(fastqfiles)
 
 def main(args):
+    try:
+        args = check_args_fastq(args)  # check if combination of arguments are correct
+    except ValueError as e:
+        print(e)
+        sys.exit(1)
     fastqfiles=run_preprocessing(args)
 
 
