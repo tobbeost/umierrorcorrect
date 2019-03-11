@@ -128,17 +128,26 @@ def cluster_consensus_worker(args):
                             'singletons: ' + str(len(singleton_matrix))]) + '\n')
 
 
+def update_bam_header(bamfile, samplename):
+    with pysam.AlignmentFile(bamfile,'rb') as f:
+        new_header = f.header.copy().to_dict()
+        template = { 'ID': 'L1', 
+                     'SM': samplename,
+                     'LB': samplename,
+                     'PL': 'ILLUMINA'}
+    
+    new_header['RG'] = [template]
+    return(new_header)
+
+
 def merge_bams(output_path, bamfilelist, sample_name):
     '''Merge all BAM files for in bamfilelist, and remove temporary files'''
-    with pysam.AlignmentFile(bamfilelist[0], 'rb') as f, \
-         pysam.AlignmentFile(output_path + '/' + sample_name + '_consensus_reads.bam', 'wb', template=f) as g:
-        for line in f:
-            g.write(line)
-        if len(bamfilelist) > 1:
-            for filename in bamfilelist[1:]:
-                with pysam.AlignmentFile(filename, 'rb') as f1:
-                    for line in f1:
-                        g.write(line)
+    new_header = update_bam_header(bamfilelist[0], sample_name)
+    with pysam.AlignmentFile(output_path + '/' + sample_name + '_consensus_reads.bam', 'wb', header=new_header) as g:
+        for filename in bamfilelist:
+            with pysam.AlignmentFile(filename, 'rb') as f1:
+                for line in f1:
+                    g.write(line)
 
     for filename in bamfilelist:
         os.remove(filename)

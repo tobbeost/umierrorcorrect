@@ -58,8 +58,7 @@ class consensus_read:
         a.mapping_quality = 60
         a.cigar = self.get_cigar()
         a.query_qualities = pysam.qualitystring_to_array(self.qual)
-        a.tags = (("NM", self.nmtag),
-                  ("RG", "L1"))
+        a.tags = (("NM", self.nmtag), ("RG", "L1"))
         f.write(a)
 
 

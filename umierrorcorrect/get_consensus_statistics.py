@@ -87,22 +87,9 @@ def get_stat(consensus_filename, stat_filename):
     for regionid,pos,singletons,name in regions:
         stat=region_cons_stat(regionid, pos, name, singletons)
         stat.add_histogram(hist[regionid], fsizes)
-        print(stat.write_stats())
+        #print(stat.write_stats())
         regionstats.append(stat)
     return(regionstats)
-#def write_stat(f,consensus_seq,singleton_matrix,contig,start,end):
-#    for read in consensus_seq:
-#        g.write('{}:{}-{}\t{}'.format(contig,start,end,read.count)
-#
-#        
-#    regions,ends=readBam(bamfilename,position_threshold)
-#def print_overall_stats(statdict):
-#   fsizes=[1,2,3,4,5,7,10,20,30]
-#    r0=sum(statdict)+singletons
-#    u0=len(statdict)+singletons
-#    m0=max(statdict)
-#    print(regionid,pos,name,'0','1.0',r0,u0,m0)
-#    for fsize in fsizes:
 
 
 def get_overall_statistics(hist,fsizes):
@@ -121,7 +108,9 @@ def get_overall_statistics(hist,fsizes):
         for fsize in fsizes:    
             histall.total_reads[fsize] += region.total_reads[fsize]
             histall.umis[fsize] += region.umis[fsize]
-    print(histall.write_stats())
+    #print(histall.write_stats())
+    return(histall)
+
 
 def plot_histogram(hist,plot_filename):
     umisizesall=[]
@@ -138,12 +127,18 @@ def plot_histogram(hist,plot_filename):
     plt.xlim(0,500)
     plt.savefig(plot_filename)
 
-def main(output_path, consensus_filename, stat_filename):
+
+def run_get_consensus_statistics(output_path, consensus_filename, stat_filename):
     hist=get_stat(consensus_filename,stat_filename)
     fsizes=[1,2,3,4,5,7,10,20,30]
-    get_overall_statistics(hist,fsizes)
-    #plot_filename=consensus_filename[:-4]+'.png'
-    #plot_histogram(hist,plot_filename)
+    histall = get_overall_statistics(hist,fsizes)
+    print(histall.write_stats())
+    for stat in hist:
+        print(stat.write_stats())
+
+
+def main(output_path, consensus_filename, stat_filename):
+    run_get_consensus_statistics(output_path,  consensus_filename, stat_filename)
 
 
 if __name__=='__main__':
