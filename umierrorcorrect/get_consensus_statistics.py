@@ -96,16 +96,16 @@ def get_overall_statistics(hist,fsizes):
     histall = region_cons_stat('All','all_regions','',0)
     histall.total_reads = {}
     histall.umis = {}
-    fsizesnew=fsizes
-    histall.fsizes = fsizesnew
-    fsizes.insert(0,0)
-    print(fsizes)
-    for fsize in fsizes:
+    fsizesnew=fsizes.copy()
+    histall.fsizes = fsizes
+    fsizesnew.insert(0,0)
+    print(fsizesnew)
+    for fsize in fsizesnew:
         histall.total_reads[fsize]=0
         histall.umis[fsize]=0
     
     for region in hist:
-        for fsize in fsizes:    
+        for fsize in fsizesnew:    
             histall.total_reads[fsize] += region.total_reads[fsize]
             histall.umis[fsize] += region.umis[fsize]
     #print(histall.write_stats())
