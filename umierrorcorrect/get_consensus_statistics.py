@@ -15,6 +15,7 @@ def parseArgs():
     parser.add_argument('-c', '--cons_bam', dest='cons_bam_file', help='Path to the consensus BAM-file')
     parser.add_argument('-hist', '--hist_file', dest='hist_file',
                         help='Path to the .hist file')
+    parser.add_argument('-s','--sample_name',dest='samplename', help='Sample name, if not provided it is extracted')
     args = parser.parse_args(sys.argv[1:])
 
     return(args)
@@ -92,6 +93,29 @@ def get_stat(consensus_filename, stat_filename):
     return(regionstats)
 
 
+def write_report():
+    from markdown2 import Markdown
+    md=Markdown()
+    print(md.convert("#Report for sample {}".format("samplename")))
+
+
+def calculate_target_coverage(stats,fsizes):
+    reads_all = {}
+    reads_target = {}
+    fsizes.insert(0,0)
+    for fsize in fsizes:
+        reads_all[fsize]=0
+        reads_target[fsize]=0
+    for region in stats:
+        for fsize in fsizes:
+            reads_all[fsize] += region.umis[fsize]
+            if region.name not in '':
+                reads_target[fsize] += region.umis[fsize]
+    for fsize in fsizes:
+        print(fsize, reads_target[fsize], reads_all[fsize], 1.0*(reads_target[fsize] / reads_all[fsize]))
+        
+
+
 def get_overall_statistics(hist,fsizes):
     histall = region_cons_stat('All','all_regions','',0)
     histall.total_reads = {}
@@ -111,6 +135,16 @@ def get_overall_statistics(hist,fsizes):
     #print(histall.write_stats())
     return(histall)
 
+def get_percent_mapped_reads(num_fastq_reads, bamfile):
+    '''Get the number of mapped reads from the .bai file'''
+    with pysam.AlignmentFile(bamfile,'rb') as f:
+        stats = f.get_index_statistics()
+        num_mapped = 0
+        for s in mapped:
+            num_mapped += s.mapped
+    ratio = (num_mapped / num_fastq_reads)*1.0
+    return(num_mapped,ratio)
+
 
 def plot_histogram(hist,plot_filename):
     umisizesall=[]
@@ -128,21 +162,26 @@ def plot_histogram(hist,plot_filename):
     plt.savefig(plot_filename)
 
 
-def run_get_consensus_statistics(output_path, consensus_filename, stat_filename):
+def run_get_consensus_statistics(output_path, consensus_filename, stat_filename, samplename=None):
     hist=get_stat(consensus_filename,stat_filename)
     fsizes=[1,2,3,4,5,7,10,20,30]
     histall = get_overall_statistics(hist,fsizes)
-    print(histall.write_stats())
-    for stat in hist:
-        print(stat.write_stats())
+    if not samplename:
+        samplename = stat_filename.split('/')[-1][:-5]
+    outfilename = output_path + '/' + samplename + '_summary_statistics.txt'
+    with open(outfilename, 'w') as g:
+        g.write(histall.write_stats()+'\n')
+        for stat in hist:
+            g.write(stat.write_stats()+'\n')
+    calculate_target_coverage(hist,fsizes)
+    #write_report()
 
-
-def main(output_path, consensus_filename, stat_filename):
-    run_get_consensus_statistics(output_path,  consensus_filename, stat_filename)
+def main(output_path, consensus_filename, stat_filename, samplename):
+    run_get_consensus_statistics(output_path,  consensus_filename, stat_filename, samplename)
 
 
 if __name__=='__main__':
     args=parseArgs()
-    main(args.output_path, args.cons_bam_file, args.hist_file)
+    main(args.output_path, args.cons_bam_file, args.hist_file, args.samplename)
 
 

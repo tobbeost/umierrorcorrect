@@ -114,19 +114,23 @@ def preprocess_se(infilename, outfilename, barcode_length, spacer_length):
     '''Run the preprocessing for single end data (one fastq file).'''
     with open(infilename) as f, open(outfilename, 'w') as g:
         read_start = barcode_length + spacer_length
+        nseqs = 0
         for name, seq, qual in read_fastq(f):
+            nseqs += 1
             barcode = seq[:barcode_length]
             # g.write(name+':'+barcode+'\n'+rest+'\n'+qualname+'\n'+qual[12+11:]+'\n')
             parts = name.split()
             newname = ':'.join([parts[0], barcode]) + ' ' + parts[-1]
             g.write('\n'.join([newname, seq[read_start:], '+', qual[read_start:]]) + '\n')
-
+    return(nseqs)
 
 def preprocess_pe(r1file, r2file, outfile1, outfile2, barcode_length, spacer_length, dual_index):
     '''Run the preprocessing for paired end data (two fastq files).'''
     read_start = barcode_length + spacer_length
     with open(r1file) as f1, open(r2file) as f2, open(outfile1, 'w') as g1, open(outfile2, 'w') as g2:
+        nseqs = 0
         for name1, seq1, qual1, name2, seq2, qual2 in read_fastq_paired_end(f1, f2):
+            nseqs += 1
             if dual_index:
                 barcode = seq1[:barcode_length] + seq2[:barcode_length]
             else:
@@ -140,7 +144,7 @@ def preprocess_pe(r1file, r2file, outfile1, outfile2, barcode_length, spacer_len
                 g2.write('\n'.join([newname2, seq2[read_start:], '+', qual2[read_start:]]) + '\n')
             else:
                 g2.write('\n'.join([newname2, seq2, '+', qual2]) + '\n')
-
+    return(2*nseqs)
 
 def run_preprocessing(args):
     '''Start preprocessing.'''
@@ -161,7 +165,7 @@ def run_preprocessing(args):
     logging.info('Writing output files to {}'.format(args.output_path))
     if args.mode == 'single':
         outfilename = args.output_path + '/' + args.sample_name + '_umis_in_header.fastq'
-        preprocess_se(r1file, outfilename, args.umi_length, args.spacer_length)
+        nseqs = preprocess_se(r1file, outfilename, args.umi_length, args.spacer_length)
         run_pigz(outfilename, args.num_threads)
         os.remove(r1file)
         os.rmdir(newtmpdir)
@@ -179,7 +183,7 @@ def run_preprocessing(args):
             # r2file=args.read2
             outfile1 = args.output_path + '/' + args.sample_name + '_R1_umis_in_header.fastq'
             outfile2 = args.output_path + '/'+ args.sample_name + '_R2_umis_in_header.fastq'
-        preprocess_pe(r1file, r2file, outfile1, outfile2, args.umi_length, args.spacer_length, args.dual_index)
+        nseqs = preprocess_pe(r1file, r2file, outfile1, outfile2, args.umi_length, args.spacer_length, args.dual_index)
         run_pigz(outfile1, args.num_threads)
         run_pigz(outfile2, args.num_threads)
         os.remove(r1file)
@@ -187,7 +191,7 @@ def run_preprocessing(args):
         os.rmdir(newtmpdir)
         fastqfiles=[outfile1 + '.gz', outfile2 + '.gz']
     logging.info("Finished preprocessing")
-    return(fastqfiles)
+    return(fastqfiles, nseqs)
 
 def main(args):
     try:
@@ -195,8 +199,8 @@ def main(args):
     except ValueError as e:
         print(e)
         sys.exit(1)
-    fastqfiles=run_preprocessing(args)
-
+    fastqfiles, nseqs = run_preprocessing(args)
+    print(nseqs)
 
 if __name__ == '__main__':
     args = parseArgs()

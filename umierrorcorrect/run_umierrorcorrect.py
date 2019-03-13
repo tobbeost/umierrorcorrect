@@ -16,6 +16,7 @@ from umierrorcorrect.src.handle_sequences import read_fastq, read_fastq_paired_e
 from umierrorcorrect.preprocess import run_preprocessing, get_sample_name
 from umierrorcorrect.run_mapping import run_mapping
 from umierrorcorrect.umi_error_correct import run_umi_errorcorrect
+from umierrorcorrect.src.check_args import check_args_fastq, check_args_bam
 import argparse
 import os
 import logging
@@ -94,8 +95,10 @@ def parseArgs():
 def main(args):
     if not args.sample_name:
         args.sample_name = get_sample_name(args.read1, args.mode)
-    fastq_files = run_preprocessing(args)
-    print(fastq_files)
+    args=check_args_fastq(args)
+    args=check_args_bam(args)
+    fastq_files, nseqs = run_preprocessing(args)
+    print(fastq_files, nseqs)
     bam_file = run_mapping(args.num_threads, args.reference_file, fastq_files, args.output_path, args.sample_name)
     args.bam_file = bam_file
     print(args.bam_file)
