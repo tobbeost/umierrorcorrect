@@ -155,7 +155,7 @@ def merge_bams(output_path, bamfilelist, sample_name):
 def merge_cons(output_path, consfilelist, sample_name):
     '''Merge all cons files in consfilelist and remove temporary files.'''
     with open(output_path + '/' + sample_name + '.cons', 'w') as g:
-        g.write('Contig\tPosition\tReference\tA\tC\tG\tT\tI\tD\tN\tCoverage\
+        g.write('Contig\tPosition\tName\tReference\tA\tC\tG\tT\tI\tD\tN\tCoverage\
                  \tConsensus group size\tMax Non-ref Allele Frequency\tMax Non-ref Allele\n')
         for filename in consfilelist:
             with open(filename) as f:
