@@ -3,7 +3,9 @@ import pysam
 import sys
 import argparse
 import matplotlib.pyplot as plt
+import logging
 from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, merge_regions, get_annotation
+
 
 def parseArgs():
     '''Function for parsing arguments'''
@@ -17,6 +19,8 @@ def parseArgs():
                         help='Path to the .hist file')
     parser.add_argument('-s','--sample_name',dest='samplename', help='Sample name, if not provided it is extracted')
     args = parser.parse_args(sys.argv[1:])
+    logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
+    logging.info('Starting UMI Error Correct')
 
     return(args)
 
@@ -92,7 +96,6 @@ def get_stat(consensus_filename, stat_filename):
         regionstats.append(stat)
     return(regionstats)
 
-
 def write_report():
     from markdown2 import Markdown
     md=Markdown()
@@ -163,17 +166,20 @@ def plot_histogram(hist,plot_filename):
 
 
 def run_get_consensus_statistics(output_path, consensus_filename, stat_filename, samplename=None):
+    logging.info('Getting consensus statistics')
     hist=get_stat(consensus_filename,stat_filename)
     fsizes=[1,2,3,4,5,7,10,20,30]
     histall = get_overall_statistics(hist,fsizes)
     if not samplename:
         samplename = stat_filename.split('/')[-1][:-5]
     outfilename = output_path + '/' + samplename + '_summary_statistics.txt'
+    logging.info('Writing consensus statistics to '+outfilename)
     with open(outfilename, 'w') as g:
         g.write(histall.write_stats()+'\n')
         for stat in hist:
             g.write(stat.write_stats()+'\n')
     calculate_target_coverage(hist,fsizes)
+    logging.info('Finished consensus statistics')
     #write_report()
 
 def main(output_path, consensus_filename, stat_filename, samplename):

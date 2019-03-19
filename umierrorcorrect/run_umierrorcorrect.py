@@ -17,6 +17,7 @@ from umierrorcorrect.preprocess import run_preprocessing, get_sample_name
 from umierrorcorrect.run_mapping import run_mapping
 from umierrorcorrect.umi_error_correct import run_umi_errorcorrect
 from umierrorcorrect.src.check_args import check_args_fastq, check_args_bam
+from umierrorcorrect.get_consensus_statistics import run_get_consensus_statistics
 import argparse
 import os
 import logging
@@ -97,12 +98,17 @@ def main(args):
         args.sample_name = get_sample_name(args.read1, args.mode)
     args=check_args_fastq(args)
     args=check_args_bam(args)
-    fastq_files, nseqs = run_preprocessing(args)
+    fastq_files, nseqs = run_preprocessing(args)  # run preprocessing
     print(fastq_files, nseqs)
-    bam_file = run_mapping(args.num_threads, args.reference_file, fastq_files, args.output_path, args.sample_name)
+    bam_file = run_mapping(args.num_threads, args.reference_file, fastq_files, 
+                           args.output_path, args.sample_name)  # run mapping
     args.bam_file = bam_file
     print(args.bam_file)
-    run_umi_errorcorrect(args)
+    run_umi_errorcorrect(args)  #run umi errorcorrect
+    cons_bam = args.output_path + '/' + args.sample_name + '_consensus_reads.bam'
+    stat_filename = args.output_path + '/' + args.sample_name + '.hist'
+    run_get_consensus_statistics(args.output_path, cons_bam, stat_filename, args.sample_name)
+
     logging.info("Finished UMI Error Correct")
 
 if __name__ == '__main__':
