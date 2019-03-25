@@ -97,7 +97,7 @@ def main(args):
     if not args.sample_name:
         args.sample_name = get_sample_name(args.read1, args.mode)
     args=check_args_fastq(args)
-    args=check_args_bam(args)
+    #args=check_args_bam(args)
     fastq_files, nseqs = run_preprocessing(args)  # run preprocessing
     print(fastq_files, nseqs)
     bam_file = run_mapping(args.num_threads, args.reference_file, fastq_files, 

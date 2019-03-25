@@ -76,7 +76,7 @@ def main(filename,fsize):
     data=np.array(data)
     rout=data[Q>=40]
     Qsig=Q[Q>=40]
-    for r,q in zip(rout,Qsig):
+    for r,q in zip(data,Q):
         print(r+'\t'+str(q))
     #with open('fraction.txt') as f:
     #    data=[]

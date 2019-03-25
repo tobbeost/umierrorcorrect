@@ -17,7 +17,7 @@ def get_sample_name(filename, mode):
     elif mode == 'paired':
         sample_name = filename.split('/')[-1].rstrip('fastq').rstrip('fastq.gz').rstrip('_R012')
     elif mode == 'bam':
-        sample_name=bamfile.split('/')[-1]
+        sample_name=filename.split('/')[-1]
         if '.sorted' in sample_name:
             sample_name = sample_name.replace('.sorted','')
         sample_name = sample_name.replace('.bam','')
@@ -53,8 +53,9 @@ def check_args_fastq(args):
 def check_args_bam(args):
     '''Function for checking arguments'''
     args.output_path = check_output_directory(args.output_path)
+    basenamefile=args.read1
     if not args.sample_name:
-        args.sample_name = get_sample_name(basenamefile, 'bam')
+        args.sample_name = get_sample_name(basenamefile, args.mode)
     if args.regions_from_bed and not args.bed_file:
         raise ValueError("To use option regions_from_bed a bedfile needs to be supplied, using -bed option")
     return(args)
