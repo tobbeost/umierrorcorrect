@@ -121,15 +121,12 @@ def cluster_consensus_worker(args):
         g = open(consfilename, 'w')
         g.close()
     #Write to hist/stat file
-    if len(cons) > 0:
-        with open(statfilename, 'w') as g2:
-            name=get_overlap(annotations, start, endpos)
-            regionname = '{}:{}-{}'.format(contig, start, endpos)
-            g2.write('\t'.join([str(regionid), regionname, name, 'consensus_reads: ' + str(num_cons),  
-                                'singletons: ' + str(len(singleton_matrix))]) + '\n')
-    else:  # empty file
-        g = open(statfilename, 'w')
-        g.close()
+    with open(statfilename, 'w') as g2:
+        name=get_overlap(annotations, start, endpos)
+        regionname = '{}:{}-{}'.format(contig, start, endpos)
+        g2.write('\t'.join([str(regionid), regionname, name, 'consensus_reads: ' + str(num_cons),  
+                            'singletons: ' + str(len(singleton_matrix))]) + '\n')
+
 
 def update_bam_header(bamfile, samplename):
     with pysam.AlignmentFile(bamfile,'rb') as f:
@@ -181,10 +178,11 @@ def merge_stat(output_path, statfilelist, sample_name):
         os.remove(filename)
 
 
-def index_bam_file(filename, num_threads=1):
+def index_bam_file(filename, include_singletons=False, num_threads=1):
     '''Index the consensus reads bam file'''
-    pysam.sort('-@',  num_threads, filename, '-o', filename + '.sorted', catch_stdout=False)
-    os.rename(filename + '.sorted', filename)
+    if include_singletons:  # if singletons are included the file is not sorted
+        pysam.sort('-@',  num_threads, filename, '-o', filename + '.sorted', catch_stdout=False)
+        os.rename(filename + '.sorted', filename)
     pysam.index(filename, catch_stdout=False)
 
 
@@ -267,7 +265,7 @@ def run_umi_errorcorrect(args):
                                            args.consensus_frequency_threshold)
     merge_bams(args.output_path, bamfilelist, args.sample_name)
     index_bam_file(args.output_path + '/' + args.sample_name + '_consensus_reads.bam',
-              args.num_threads)
+              args.include_singletons, args.num_threads)
     consfilelist = [x.rstrip('.bam') + '.cons' for x in bamfilelist]
     merge_cons(args.output_path, consfilelist, args.sample_name)
     statfilelist = [x.rstrip('.bam') + '.hist' for x in bamfilelist]

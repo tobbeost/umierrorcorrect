@@ -202,8 +202,13 @@ def getConsensus3(group_seqs, contig, regionid, indel_freq_threshold, umi_info, 
         consread = consensus_read(contig, regionid, consensus_sorted[0], umi_info.centroid, umi_info.count)
         add_consensus = True
         skippos = [] #if position is del
+        prevpos = consensus_sorted[0] - 1
         for pos in sorted(consensus_sorted):
             if pos not in skippos:
+                if not pos == prevpos + 1:
+                    for i in range(prevpos+1,pos):
+                        if i not in skippos:
+                            consread.add_base('N', get_ascii(0))
                 if 'I' in consensus[pos]:
                     # first add the insertion if it is in the majority of the reads, then add the base at the next position
                     cons_dict = consensus[pos]['I']
@@ -254,6 +259,8 @@ def getConsensus3(group_seqs, contig, regionid, indel_freq_threshold, umi_info, 
                                 add_consensus = False
                     else:
                         consread.add_base(cons_base, get_ascii(cons_qual))
+            prevpos=pos
+
         if add_consensus:
             return(consread)
         else:

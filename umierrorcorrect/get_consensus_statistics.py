@@ -90,10 +90,11 @@ def get_stat(consensus_filename, stat_filename):
     fsizes=[1,2,3,4,5,7,10,20,30]
     regionstats=[]
     for regionid,pos,singletons,name in regions:
-        stat=region_cons_stat(regionid, pos, name, singletons)
-        stat.add_histogram(hist[regionid], fsizes)
-        #print(stat.write_stats())
-        regionstats.append(stat)
+        if regionid in hist:
+            stat=region_cons_stat(regionid, pos, name, singletons)
+            stat.add_histogram(hist[regionid], fsizes)
+            #print(stat.write_stats())
+            regionstats.append(stat)
     return(regionstats)
 
 def write_report():
