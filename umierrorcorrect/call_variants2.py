@@ -7,6 +7,7 @@ from scipy.stats import beta
 from scipy.special import beta as B
 from scipy.special import comb
 import sys
+import matplotlib.pyplot as plt
 
 def betaNLL(params,*args):
     a,b = params
@@ -62,7 +63,19 @@ def write_vcf(vcffile,rout,Qsig,reference):
                 '\n##source=umierrorcorrectV0.1\n##INFO=<ID=DP,Number=1,\
                 Type=Integer,Description="Total Depth>\n')
 
-def main(filename,fsize):
+def plot_histogram(hist,plot_filename):
+    
+    num_bins=100
+    n,bins,patches=plt.hist(hist,num_bins,facecolor='dodgerblue',alpha=0.5)
+    plt.xlabel('Q-score')
+    plt.ylabel('Frequency')
+    plt.title('Histogram of Q-scores')
+    plt.box(False)
+    plt.xlim(0,100)
+    plt.savefig(plot_filename)
+
+
+def main(filename,fsize,cutoff):
     f1,n1,data=parse_cons_file(filename,fsize)
     print(f1)
     f1 = np.array(f1)
@@ -74,8 +87,9 @@ def main(filename,fsize):
     a[np.isnan(a)]=1e-10
     Q = -10*np.log10(a)
     data=np.array(data)
-    rout=data[Q>=40]
-    Qsig=Q[Q>=40]
+    plot_histogram(Q,'histogram.png')
+    rout=data[Q>=cutoff]
+    Qsig=Q[Q>=cutoff]
     for r,q in zip(rout,Qsig):
         print(r+'\t'+str(q))
     #with open('fraction.txt') as f:
@@ -89,4 +103,4 @@ def main(filename,fsize):
     #print(result)
 
 if __name__=='__main__':
-    main(sys.argv[1],int(sys.argv[2]))
+    main(sys.argv[1],int(sys.argv[2]),float(sys.argv[3]))
