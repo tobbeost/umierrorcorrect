@@ -94,7 +94,7 @@ def get_cons_info(consensus_seq, singletons, fsizes=[0, 1, 2, 3, 4, 5, 7, 10, 20
                                     deletion = True
                                 else:
                                     deletion = False
-                        pos += 1
+                            pos += 1
                         if pos not in cons:
                             cons[pos] = {}
                         for fsize in fsizes:
@@ -188,7 +188,8 @@ def write_consensus(f, cons, ref_seq, start, contig, annotation, only_target_reg
     # print(list(cons.keys())[0],list(cons.keys())[-1],start,len(ref_seq))
 
     for pos in sorted(cons):
-        annotation_pos = get_annotation(annotation, pos)
+        
+        annotation_pos = get_annotation(annotation, pos + 1)
         if not (annotation_pos == "" and only_target_regions):
             # if len(ref_seq)<(pos-start+1):
             #     print("error",contig,start,ref_seq)
@@ -197,7 +198,7 @@ def write_consensus(f, cons, ref_seq, start, contig, annotation, only_target_reg
             for fsize in cons[pos]:
                 line = []
                 line.append(contig)
-                line.append(str(pos))
+                line.append(str(pos + 1))
                 line.append(annotation_pos)
                 line.append(refbase)
                 if len(cons[pos][fsize]) > 1:
