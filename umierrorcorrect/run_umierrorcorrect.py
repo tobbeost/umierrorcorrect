@@ -31,7 +31,7 @@ def parseArgs():
     group1.add_argument('-r1', '--read1', dest='read1', help='Path to first FASTQ file, R1, required', required=True)
     group1.add_argument('-r2', '--read2', dest='read2', help='Path to second FASTQ file, R2 if applicable')
     group1.add_argument('-r', '--reference', dest='reference_file', 
-                        help='Path to the reference sequence in Fasta format (indexed)')
+                        help='Path to the reference sequence in Fasta format (indexed), required', required=True)
     group1.add_argument('-bed', '--bed_file', dest='bed_file', 
                         help='Path to a BED file defining the targeted regions, i.e. chromosomal positions. \
                              The Bed file is used for annotation.')
@@ -85,6 +85,8 @@ def parseArgs():
                         help="temp directory where the temporary files are written and then removed. \
                               Should be the scratch directory on the node. Default is a temp directory \
                               in the output folder.")
+    group5.add_argument('-f', '--force', dest='force',action='store_true',
+                        help='Include this flag to force output files to be overwritten')
     group5.add_argument('-t', '--num_threads', dest='num_threads', 
                         help='Number of threads to run the program on. Default=%(default)s', default='1')
     args = parser.parse_args(sys.argv[1:])

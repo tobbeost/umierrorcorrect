@@ -30,7 +30,7 @@ def parseArgs():
                               BAM file. ', 
                         action='store_true')
     parser.add_argument('-r', '--reference', dest='reference_file', 
-                        help='Path to the reference sequence in Fasta format (indexed), Used for annotation')
+                        help='Path to the reference sequence in Fasta format, Used for annotation, required', required=True)
     parser.add_argument('-s', '--sample_name', dest='sample_name', 
                         help='Sample name that will be used as base name for the output files. \
                         If excluded the sample name will be extracted from the BAM file.')
@@ -257,9 +257,12 @@ def run_umi_errorcorrect(args):
     logging.info("Starting Consensus sequence generation")
     logging.info("Starting {} threads".format(num_cpus))
     fasta = args.reference_file
-    bedregions = read_bed(args.bed_file)
-    bedregions = sort_regions(bedregions)
-    bedregions = merge_regions(bedregions, 0)
+    if args.bed_file:
+        bedregions = read_bed(args.bed_file)
+        bedregions = sort_regions(bedregions)
+        bedregions = merge_regions(bedregions, 0)
+    else:
+        bedregions = []
     bamfilelist = cluster_umis_all_regions(regions, ends, edit_distance_threshold, 
                                            args.bam_file, args.output_path, 
                                            args.include_singletons, fasta, bedregions, 

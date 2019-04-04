@@ -16,7 +16,7 @@ def parseArgs():
     parser.add_argument('-r2', '--read2', dest='read2', 
                         help='Path to second FASTQ file, R2 if applicable')
     parser.add_argument('-r', '--reference', dest='reference_file', 
-                        help='Path to the reference sequence in Fasta format (indexed), Used for annotation')
+                        help='Path to the reference sequence in Fasta format (indexed), Required', required=True)
     parser.add_argument('-s', '--sample_name', dest='sample_name', 
                         help='Sample name that will be used as base name for the output files. \
                               If excluded the sample name will be extracted from the fastq files.')

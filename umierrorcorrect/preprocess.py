@@ -53,9 +53,8 @@ def parseArgs():
     parser.add_argument('-tmpdir', '--tmp_dir', dest='tmpdir', 
                         help="temp directory where the temporary files are written and then removed. Should be the \
                               scratch directory on the node. Default is a temp directory in the output folder.")
-    parser.add_argument('-cs', '--chunk_size', dest='chunksize', 
-                        help="Chunk size for reading the fastq files in chunks. Only used if num_threads > 1. \
-                              [default = %(default)i]", default=25000)
+    parser.add_argument('-f', '--force', dest='force',action='store_true',
+                        help='Include this flag to force output files to be overwritten')
     parser.add_argument('-t', '--num_threads', dest='num_threads', 
                         help='Number of threads to run the program on. Default=%(default)s', default='1')
     args = parser.parse_args(sys.argv[1:])

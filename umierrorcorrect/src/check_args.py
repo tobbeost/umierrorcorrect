@@ -48,7 +48,25 @@ def check_args_fastq(args):
     except ValueError as e:
         raise(e + " Spacer length needs to be an integer")
         sys.exit(1)
+    #check if umis_in_header file exists
+    if args.mode == 'paired':
+        f1file=args.output_path + '/' + args.sample_name + '_R1_umis_in_header.fastq.gz'
+        f2file=args.output_path + '/' + args.sample_name + '_R2_umis_in_header.fastq.gz'
+        if os.path.isfile(f1file) or os.path.isfile(f2file):
+            if not args.force:
+                raise ValueError("The file {} already exists. Overwrite it by including --force in the command line".format(f1file))
+            else:
+                os.remove(f1file)
+                os.remove(f2file)
+    elif args.mode == 'single':
+        f1file=args.output_path + '/' + args.sample_name + '_umis_in_header.fastq'
+        if os.path.isfile(f1file):
+            if not args.force:
+                raise ValueError("The file {} already exists. Overwrite it by including --force in the command line".format(f1file))
+            else:
+                os.remove(f1file)
     return(args)
+    
 
 def check_args_bam(args):
     '''Function for checking arguments'''
@@ -59,3 +77,4 @@ def check_args_bam(args):
     if args.regions_from_bed and not args.bed_file:
         raise ValueError("To use option regions_from_bed a bedfile needs to be supplied, using -bed option")
     return(args)
+
