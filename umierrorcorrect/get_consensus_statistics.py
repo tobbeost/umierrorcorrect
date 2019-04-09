@@ -116,7 +116,10 @@ def calculate_target_coverage(stats,fsizes):
             if region.name not in '':
                 reads_target[fsize] += region.umis[fsize]
     for fsize in fsizes:
-        print(fsize, reads_target[fsize], reads_all[fsize], 1.0*(reads_target[fsize] / reads_all[fsize]))
+        if reads_all[fsize] > 0:
+            print(fsize, reads_target[fsize], reads_all[fsize], 1.0*(reads_target[fsize] / reads_all[fsize]))
+        else:
+            print(fsize, reads_target[fsize], reads_all[fsize], 0)
         
 
 

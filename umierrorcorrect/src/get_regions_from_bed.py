@@ -8,10 +8,11 @@ def read_bed(bedfile):
         for line in f:
             line = line.strip()
             parts = line.split()
-            contig, start, end, name  = parts[0:4]
-            if contig not in regions:
-                regions[contig] = []
-            regions[contig].append((int(start), int(end), name))
+            if len(parts) >= 4:
+                contig, start, end, name  = parts[0:4]
+                if contig not in regions:
+                    regions[contig] = []
+                regions[contig].append((int(start), int(end), name))
     return(regions)
 
 

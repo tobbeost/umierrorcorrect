@@ -100,15 +100,6 @@ def run_pigz(filename, num_threads):
     p.wait()
 
 
-def get_sample_name(read1, mode):
-    '''Get the sample name as the basename of the input files.'''
-    if mode == 'single':
-        samplename = read1.split('/')[-1].rstrip('fastq').rstrip('fastq.gz')
-    elif mode == 'paired':
-        samplename = read1.split('/')[-1].rstrip('fastq').rstrip('fastq.gz').rstrip('_R012')
-    return(samplename)
-
-
 def preprocess_se(infilename, outfilename, barcode_length, spacer_length):
     '''Run the preprocessing for single end data (one fastq file).'''
     with open(infilename) as f, open(outfilename, 'w') as g:

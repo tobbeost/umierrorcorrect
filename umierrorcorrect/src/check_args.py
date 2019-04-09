@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import re
 
 def check_output_directory(outdir):
     '''Check if outdir exists, otherwise create it'''
@@ -15,7 +16,14 @@ def get_sample_name(filename, mode):
     if mode == 'single':
         sample_name = filename.split('/')[-1].rstrip('fastq').rstrip('fastq.gz')
     elif mode == 'paired':
-        sample_name = filename.split('/')[-1].rstrip('fastq').rstrip('fastq.gz').rstrip('_R012')
+        sample_name = filename.split('/')[-1].rstrip('fastq').rstrip('fastq.gz')
+        if sample_name.endswith('_001'):
+            sample_name = sample_name[:-4]
+        if re.match('.*R[1-2]$', sample_name):
+            sample_name = sample_name[:-2]
+        sample_name = sample_name.rstrip('_')
+        if re.search('.*_L00[0-9]$',sample_name):
+            sample_name=sample_name[:-5]
     elif mode == 'bam':
         sample_name=filename.split('/')[-1]
         if '.sorted' in sample_name:
@@ -48,7 +56,13 @@ def check_args_fastq(args):
     except ValueError as e:
         raise(e + " Spacer length needs to be an integer")
         sys.exit(1)
-    #check if umis_in_header file exists
+    #check if fastq files exist
+    if not os.path.isfile(args.read1):
+        raise ValueError("The file specified as r1 ({}) does not exist.".format(args.read1))
+    if args.mode == 'paired':
+        if not os.path.isfile(args.read2):
+            raise ValueError("The file specified as r2 ({}) does not exist.".format(args.read2))
+    #heck if umis_in_header file exists
     if args.mode == 'paired':
         f1file=args.output_path + '/' + args.sample_name + '_R1_umis_in_header.fastq.gz'
         f2file=args.output_path + '/' + args.sample_name + '_R2_umis_in_header.fastq.gz'
