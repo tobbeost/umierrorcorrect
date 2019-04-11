@@ -3,7 +3,7 @@
 import os
 import re
 import subprocess
-
+import errno
 def check_output_directory(outdir):
     '''Check if outdir exists, otherwise create it'''
     if os.path.isdir(outdir):
@@ -37,7 +37,7 @@ def is_tool(name):
         devnull = open(os.devnull)
         subprocess.Popen([name,'--version'], stdout=devnull, stderr=devnull).communicate()
     except OSError as e:
-        if e.errno == os.errno.ENOENT:
+        if e.errno == errno.ENOENT:
             return False
     return True
 
@@ -47,8 +47,6 @@ def check_args_fastq(args):
     is_pigz=is_tool('pigz')
     is_gzip=is_tool('gzip')
     is_bwa=is_tool('bwa')
-    print(is_pigz)
-    print(is_gzip)
     if not is_bwa:
         raise ValueError('Cannot find program "bwa". Please install it and add it to the path.')
     if is_pigz:
