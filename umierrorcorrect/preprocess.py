@@ -81,10 +81,23 @@ def generate_random_dir(tmpdir):
     return(newtmpdir)
 
 
-def run_unpigz(filename, tmpdir, num_threads):
+def run_unpigz(filename, tmpdir, num_threads, program):
     '''Unzip the fastq.gz files using parallel gzip (pigz).'''
     outfilename = tmpdir + '/' + filename.split('/')[-1].rstrip('.gz')
-    command = ['unpigz', '-p',  num_threads, '-c', filename]
+    if program=='pigz':
+        command = ['unpigz', '-p',  num_threads, '-c', filename]
+    elif program=='gzip':
+        command = ['gunzip', '-c', filename]
+    with open(outfilename, 'w') as g:
+        p = subprocess.Popen(command, stdout=g)
+        p.communicate()
+        p.wait()
+    return(outfilename)
+
+def run_gunzip(filename, tmpdir):
+    '''Unzip the fastq.gz files using parallel gzip (pigz).'''
+    outfilename = tmpdir + '/' + filename.split('/')[-1].rstrip('.gz')
+    command = ['gunzip', '-c', filename]
     with open(outfilename, 'w') as g:
         p = subprocess.Popen(command, stdout=g)
         p.communicate()
@@ -92,12 +105,16 @@ def run_unpigz(filename, tmpdir, num_threads):
     return(outfilename)
 
 
-def run_pigz(filename, num_threads):
+def run_pigz(filename, num_threads, program):
     '''Zip the new fastq files with parallel gzip (pigz).'''
-    command = ['pigz', '-p', num_threads, filename]
+    if program=='pigz':
+        command = ['pigz', '-p', num_threads, filename]
+    elif program=='gzip':
+        command = ['gzip', filename]
     p = subprocess.Popen(command, stdout=subprocess.PIPE)
     p.communicate()
     p.wait()
+
 
 
 def preprocess_se(infilename, outfilename, barcode_length, spacer_length):
@@ -147,16 +164,16 @@ def run_preprocessing(args):
     # args.chunksize=int(args.chunksize)
     # Unzip the fastq.gz files
     if args.mode == 'paired':
-        r1file = run_unpigz(args.read1, newtmpdir, args.num_threads)
-        r2file = run_unpigz(args.read2, newtmpdir, args.num_threads)
+        r1file = run_unpigz(args.read1, newtmpdir, args.num_threads, args.gziptool)
+        r2file = run_unpigz(args.read2, newtmpdir, args.num_threads, args.gziptool)
     else:
-        r1file = run_unpigz(args.read1, newtmpdir, args.num_threads)
+        r1file = run_unpigz(args.read1, newtmpdir, args.num_threads, args.gziptool)
 
     logging.info('Writing output files to {}'.format(args.output_path))
     if args.mode == 'single':
         outfilename = args.output_path + '/' + args.sample_name + '_umis_in_header.fastq'
         nseqs = preprocess_se(r1file, outfilename, args.umi_length, args.spacer_length)
-        run_pigz(outfilename, args.num_threads)
+        run_pigz(outfilename, args.num_threads, args.gziptool)
         os.remove(r1file)
         os.rmdir(newtmpdir)
         fastqfiles=[outfilename + '.gz']
@@ -174,8 +191,8 @@ def run_preprocessing(args):
             outfile1 = args.output_path + '/' + args.sample_name + '_R1_umis_in_header.fastq'
             outfile2 = args.output_path + '/'+ args.sample_name + '_R2_umis_in_header.fastq'
         nseqs = preprocess_pe(r1file, r2file, outfile1, outfile2, args.umi_length, args.spacer_length, args.dual_index)
-        run_pigz(outfile1, args.num_threads)
-        run_pigz(outfile2, args.num_threads)
+        run_pigz(outfile1, args.num_threads,args.gziptool)
+        run_pigz(outfile2, args.num_threads,args.gziptool)
         os.remove(r1file)
         os.remove(r2file)
         os.rmdir(newtmpdir)

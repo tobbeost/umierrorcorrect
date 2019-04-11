@@ -2,6 +2,7 @@
 
 import os
 import re
+import subprocess
 
 def check_output_directory(outdir):
     '''Check if outdir exists, otherwise create it'''
@@ -31,10 +32,32 @@ def get_sample_name(filename, mode):
         sample_name = sample_name.replace('.bam','')
     return(sample_name)
 
+def is_tool(name):
+    try:
+        devnull = open(os.devnull)
+        subprocess.Popen([name,'--version'], stdout=devnull, stderr=devnull).communicate()
+    except OSError as e:
+        if e.errno == os.errno.ENOENT:
+            return False
+    return True
 
 def check_args_fastq(args):
     '''Function for checking arguments'''
     args.output_path = check_output_directory(args.output_path)
+    is_pigz=is_tool('pigz')
+    is_gzip=is_tool('gzip')
+    is_bwa=is_tool('bwa')
+    print(is_pigz)
+    print(is_gzip)
+    if not is_bwa:
+        raise ValueError('Cannot find program "bwa". Please install it and add it to the path.')
+    if is_pigz:
+        args.gziptool='pigz'
+    elif is_gzip:
+        args.gziptool='gzip'
+    else:
+        raise ValueError('Cannot find program "gzip" or "pigz". Install one of them and add to the path.')
+
     #determine the mode (single or paired)
     if not args.read2:
         args.mode = 'single'
@@ -93,3 +116,10 @@ def check_args_bam(args):
         raise ValueError("To use option regions_from_bed a bedfile needs to be supplied, using -bed option")
     return(args)
 
+if __name__=='__main__':
+    is_pigz=is_tool('pigz')
+    is_gzip=is_tool('gzip')
+    is_bwa=is_tool('bwa')
+    print(is_pigz)
+    print(is_gzip)
+    print(is_bwa)
