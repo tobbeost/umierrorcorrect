@@ -24,6 +24,7 @@ setup(name='umierrorcorrect',
                 'umierrorcorrect/preprocess.py',
                 'umierrorcorrect/run_mapping.py',
                 'umierrorcorrect/umi_error_correct.py',
+                'umierrorcorrect/get_consensus_statistics.py',
                 'umierrorcorrect/filter_bam.py',
                 'umierrorcorrect/filter_cons.py'],
       zip_safe=False)

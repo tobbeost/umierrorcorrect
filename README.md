@@ -30,10 +30,11 @@ Python-libraries (should be installed automatically):
 External programs:
 
     bwa (bwa mem command is used)
-    pigz
+    Either of gzip or pigz (parallel gzip)
 
 Install the external programs and add them to the path.
 
+Since the umierrorcorrect pipeline is using `bwa` for mapping of reads, a bwa-indexed reference genome is needed. Index the reference genome with the command `bwa index -a bwtsw reference.fa`.
 
 Usage
 -----
