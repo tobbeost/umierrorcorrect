@@ -64,6 +64,7 @@ class consensus_read:
 
 def get_reference_sequence(fasta, chrx, start, stop):
     '''Returns the fasta sequence of the reference for a given region'''
+    chrx = str(chrx)
     ref = fasta.fetch(chrx, start, stop).upper()
     return(ref)
 
