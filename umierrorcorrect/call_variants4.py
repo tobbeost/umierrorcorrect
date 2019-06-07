@@ -48,7 +48,8 @@ def parse_cons_file(filename,fsize=3):
             famsize=parts[-3]
             if int(famsize)==fsize:
                 frac=float(parts[-2])
-                if frac > 0:
+                alt=parts[-1]
+                if frac > 0 and alt not in 'N':
                     cov=int(parts[-4])
                     f1.append(float(frac))
                     n1.append(int(cov))

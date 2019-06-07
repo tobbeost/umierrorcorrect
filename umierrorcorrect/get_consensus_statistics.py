@@ -2,7 +2,7 @@
 import pysam
 import sys
 import argparse
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import logging
 from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, merge_regions, get_annotation
 
@@ -156,16 +156,17 @@ def get_percent_mapped_reads(num_fastq_reads, bamfile):
 def plot_histogram(hist,plot_filename):
     umisizesall=[]
     for region in hist:
-        umisizesall.extend(hist[region])
-    num_bins=1000
+        umisizesall.extend(region.hist)
+        umisizesall.extend([1]*region.singletons)
+    num_bins=100
     umisizesall.sort(reverse=True)
     print(umisizesall[0:100])
-    n,bins,patches=plt.hist(umisizesall,num_bins,facecolor='dodgerblue',alpha=0.5)
+    n,bins,patches=plt.hist(umisizesall,num_bins,facecolor='dodgerblue')
     plt.xlabel('Barcode family depth')
     plt.ylabel('Frequency')
     plt.title('Histogram of barcode family depth')
     plt.box(False)
-    plt.xlim(0,500)
+    #plt.xlim(0,500)
     plt.savefig(plot_filename)
 
 
@@ -183,6 +184,8 @@ def run_get_consensus_statistics(output_path, consensus_filename, stat_filename,
         for stat in hist:
             g.write(stat.write_stats()+'\n')
     calculate_target_coverage(hist,fsizes)
+    print(hist)
+    plot_histogram(hist,output_path+'/histogram.png')
     logging.info('Finished consensus statistics')
     #write_report()
 
