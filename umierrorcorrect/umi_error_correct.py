@@ -260,7 +260,8 @@ def run_umi_errorcorrect(args):
     if args.bed_file:
         bedregions = read_bed(args.bed_file)
         bedregions = sort_regions(bedregions)
-        bedregions = merge_regions(bedregions, 0)
+        if group_method=='fromBed':
+            bedregions = merge_regions(bedregions, 0)
     else:
         bedregions = []
     bamfilelist = cluster_umis_all_regions(regions, ends, edit_distance_threshold, 

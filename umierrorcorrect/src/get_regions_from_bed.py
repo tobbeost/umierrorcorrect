@@ -58,6 +58,13 @@ def get_annotation(regions, pos):
     else:
         return("")
 
+def get_annotation2(regions, pos):
+    annotation=[]
+    for start, end, name in regions:
+        if pos >= start and pos <= end:
+            annotation.append(name)
+    return(",".join(annotation))
+
 
 def get_overlap(annotation_regions, start, end):
     for annotation_start, annotation_end, annotation_name in annotation_regions:

@@ -6,7 +6,7 @@ import pysam
 # from umi_cluster import umi_cluster
 from collections import Counter
 from umierrorcorrect.src.get_consensus import get_cons_dict, get_all_consensus, get_reference_sequence
-from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, merge_regions, get_annotation
+from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, merge_regions, get_annotation, get_annotation2
 
 
 def get_cons_info(consensus_seq, singletons, fsizes=[0, 1, 2, 3, 4, 5, 7, 10, 20, 30]):
@@ -189,7 +189,7 @@ def write_consensus(f, cons, ref_seq, start, contig, annotation, only_target_reg
 
     for pos in sorted(cons):
         
-        annotation_pos = get_annotation(annotation, pos + 1)
+        annotation_pos = get_annotation2(annotation, pos + 1)
         if not (annotation_pos == "" and only_target_regions):
             # if len(ref_seq)<(pos-start+1):
             #     print("error",contig,start,ref_seq)
