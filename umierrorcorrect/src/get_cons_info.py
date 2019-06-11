@@ -176,14 +176,15 @@ def calc_major_nonref_allele_frequency(cons, ref):
     tot = sum(cons.values())
     comp = {key: cons[key] for key in cons if key != ref}
     allele = max(comp, key=comp.get)
+    count=cons[allele]
     frac = 1.0*(cons[allele]/tot)
     if frac > 0:
-        return((allele, frac, tot))
+        return((allele, frac, count,  tot))
     else:
-        return(("", 0, tot))
+        return(("", 0, 0, tot))
 
 
-def write_consensus(f, cons, ref_seq, start, contig, annotation, only_target_regions):
+def write_consensus(f, cons, ref_seq, start, contig, annotation, samplename, only_target_regions):
     bases = ['A', 'C', 'G', 'T', 'I', 'D', 'N']
     # print(list(cons.keys())[0],list(cons.keys())[-1],start,len(ref_seq))
 
@@ -197,15 +198,17 @@ def write_consensus(f, cons, ref_seq, start, contig, annotation, only_target_reg
 
             for fsize in cons[pos]:
                 line = []
+                line.append(samplename)
                 line.append(contig)
                 line.append(str(pos + 1))
                 line.append(annotation_pos)
                 line.append(refbase)
                 if len(cons[pos][fsize]) > 1:
-                    mna, freq, tot = calc_major_nonref_allele_frequency(cons[pos][fsize], refbase)
+                    mna, freq, count, tot = calc_major_nonref_allele_frequency(cons[pos][fsize], refbase)
                 else:
                     mna = ''
                     freq = 0
+                    count = 0
                     tot = sum(cons[pos][fsize].values())
                 for base in bases:
                     if base in cons[pos][fsize]:
@@ -214,6 +217,7 @@ def write_consensus(f, cons, ref_seq, start, contig, annotation, only_target_reg
                         line.append(str(0))
                 line.append(str(tot))
                 line.append(str(fsize))
+                line.append(str(count))
                 line.append(str(freq))
                 line.append(mna)
                 f.write('\t'.join(line) + '\n')

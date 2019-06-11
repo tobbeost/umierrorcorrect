@@ -79,7 +79,7 @@ def get_sample_name(bamfile):
 
 def cluster_consensus_worker(args):
     '''Run UMI clustering and consensus read generation on one region'''
-    umi_dict, tmpfilename, regionid, contig, start, end, edit_distance_threshold, \
+    umi_dict, samplename, tmpfilename, regionid, contig, start, end, edit_distance_threshold, \
     bamfilename, include_singletons, annotations, fasta, indel_frequency_cutoff, \
     consensus_frequency_cutoff = args  # extract args
     
@@ -116,7 +116,7 @@ def cluster_consensus_worker(args):
         with pysam.FastaFile(fasta) as f:
             ref_seq = get_reference_sequence(f, contig, startpos, endpos)
         with open(consfilename, 'w') as g:
-            write_consensus(g, cons, ref_seq, startpos, contig, annotations, False)
+            write_consensus(g, cons, ref_seq, startpos, contig, annotations, samplename, False)
     else:  # empty file
         g = open(consfilename, 'w')
         g.close()
@@ -158,8 +158,7 @@ def merge_bams(output_path, bamfilelist, sample_name):
 def merge_cons(output_path, consfilelist, sample_name):
     '''Merge all cons files in consfilelist and remove temporary files.'''
     with open(output_path + '/' + sample_name + '.cons', 'w') as g:
-        g.write('Contig\tPosition\tName\tReference\tA\tC\tG\tT\tI\tD\tN\tCoverage\
-                 \tConsensus group size\tMax Non-ref Allele Frequency\tMax Non-ref Allele\n')
+        g.write('Sample Name\tContig\tPosition\tName\tReference\tA\tC\tG\tT\tI\tD\tN\tCoverage\tConsensus group size\tMax Non-ref Allele Count\tMax Non-ref Allele Frequency\tMax Non-ref Allele\n')
         for filename in consfilelist:
             with open(filename) as f:
                 for line in f:
@@ -188,7 +187,7 @@ def index_bam_file(filename, num_threads=1):
     pysam.index(filename, catch_stdout=False)
 
 
-def cluster_umis_all_regions(regions, ends, edit_distance_threshold, bamfilename, output_path, 
+def cluster_umis_all_regions(regions, ends, edit_distance_threshold, samplename,  bamfilename, output_path, 
                              include_singletons, fasta, bedregions, num_cpus, 
                              indel_frequency_cutoff, consensus_frequency_cutoff):
     '''Function for running UMI cluestering and error correction using num_cpus threads,
@@ -204,7 +203,7 @@ def cluster_umis_all_regions(regions, ends, edit_distance_threshold, bamfilename
                 annotations = []
             
             tmpfilename = '{}/tmp_{}.bam'.format(output_path, i)
-            argvec.append((regions[contig][pos], tmpfilename, int(i), contig, int(pos), 
+            argvec.append((regions[contig][pos], samplename, tmpfilename, int(i), contig, int(pos), 
                            int(ends[contig][pos]), int(edit_distance_threshold), bamfilename,
                            include_singletons, annotations, fasta, indel_frequency_cutoff,
                            consensus_frequency_cutoff))
@@ -265,7 +264,7 @@ def run_umi_errorcorrect(args):
     else:
         bedregions = []
     bamfilelist = cluster_umis_all_regions(regions, ends, edit_distance_threshold, 
-                                           args.bam_file, args.output_path, 
+                                           args.sample_name, args.bam_file, args.output_path, 
                                            args.include_singletons, fasta, bedregions, 
                                            num_cpus, args.indel_frequency_threshold, 
                                            args.consensus_frequency_threshold)
