@@ -42,18 +42,18 @@ def parse_cons_file(filename,fsize=3):
         for line in f:
             line=line.rstrip('\n')
             parts=line.split('\t')
-            name=parts[2]
+            name=parts[3]
             #print(name)
-            #if name not in "":
-            famsize=parts[-3]
-            if int(famsize)==fsize:
-                frac=float(parts[-2])
-                alt=parts[-1]
-                if frac > 0 and alt not in 'N':
-                    cov=int(parts[-4])
-                    f1.append(float(frac))
-                    n1.append(int(cov))
-                    data.append(line)
+            if name not in "":
+                famsize=parts[-4]
+                if int(famsize)==fsize:
+                    frac=float(parts[-2])
+                    alt=parts[-1]
+                    if frac > 0 and alt not in 'N':
+                        cov=int(parts[-5])
+                        f1.append(float(frac))
+                        n1.append(int(cov))
+                        data.append(line)
                 #print(name)
                 #print(famsize)
     return(f1,n1,data)
@@ -62,7 +62,14 @@ def write_vcf(vcffile,rout,Qsig,reference):
     with open(vcffile,'w') as g:
         g.write('##fileformat=VCFv4.2\n##reference='+reference+ \
                 '\n##source=umierrorcorrectV0.1\n##INFO=<ID=DP,Number=1,\
-                Type=Integer,Description="Total Depth>\n')
+                Type=Integer,Description="Total Depth>\n'+\
+                '##INFO=<ID=AD,Number=1,Type=Float,Description="Alternative Allele Depth">\n'+\
+                '##INFO=<ID=AF,Number=A,Type=Integer,Description="Alternative Allele Frequency">\n'+\
+                '##FILTER=<ID=a5,Description="Alternative Allele Depth below 5">\n'+\
+                '##FILTER=<ID=q10,Description="Variant quality below 10">\n'+\
+                '##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Allele Depth">\n')
+        for r,q in zip(rout,Qsig):
+            g.write(r+'\t'+str(q)+'\n')
 
 def plot_histogram(hist,plot_filename):
     
@@ -91,8 +98,11 @@ def main(filename,fsize,cutoff):
     plot_histogram(Q,'histogram.png')
     rout=data[Q>=cutoff]
     Qsig=Q[Q>=cutoff]
+    outfilename=filename.rstrip('.cons')+'.vcf'
+    write_vcf(outfilename,rout,Qsig,'reference')
     for r,q in zip(rout,Qsig):
         print(r+'\t'+str(q))
+
     #with open('fraction.txt') as f:
     #    data=[]
     #    for line in f:

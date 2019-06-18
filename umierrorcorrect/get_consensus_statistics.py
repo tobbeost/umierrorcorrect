@@ -187,7 +187,7 @@ def run_get_consensus_statistics(output_path, consensus_filename, stat_filename,
     print(hist)
     plot_histogram(hist,output_path+'/histogram.png')
     logging.info('Finished consensus statistics')
-    #write_report()
+    write_report()
 
 def main(output_path, consensus_filename, stat_filename, samplename):
     run_get_consensus_statistics(output_path,  consensus_filename, stat_filename, samplename)
