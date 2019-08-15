@@ -253,11 +253,11 @@ def getConsensus3(group_seqs, contig, regionid, indel_freq_threshold, umi_info, 
                                 print(cons_base+" not in consensus[pos] "+str(pos), consensus[pos])
                             else:
                                 percent = (len(consensus[pos][cons_base]) / len(group_seqs))*100.0
-                            if percent >= consensus_freq_threshold: #consensus frequency above threshold
-                                consread.add_base(cons_base, get_ascii(cons_qual))
-                            else:
-                                consread.add_base('N', get_ascii(0))
-                                add_consensus = False
+                                if percent >= consensus_freq_threshold: #consensus frequency above threshold
+                                    consread.add_base(cons_base, get_ascii(cons_qual))
+                                else:
+                                    consread.add_base('N', get_ascii(0))
+                                    add_consensus = False
                     else:
                         consread.add_base(cons_base, get_ascii(cons_qual))
             prevpos=pos
