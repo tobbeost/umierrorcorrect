@@ -2,7 +2,7 @@
 from umierrorcorrect.src.group import readBam, read_bam_from_bed
 from umierrorcorrect.src.umi_cluster import cluster_barcodes, get_connected_components, merge_clusters
 from umierrorcorrect.src.get_consensus import get_cons_dict, get_all_consensus, write_singleton_reads, get_reference_sequence
-from umierrorcorrect.src.get_cons_info import get_cons_info, write_consensus
+from umierrorcorrect.src.get_cons_info import get_cons_info, write_consensus, calc_major_nonref_allele_frequency
 from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, merge_regions, get_overlap
 import sys
 import os
@@ -111,8 +111,8 @@ def cluster_consensus_worker(args):
     consfilename = outfilename.rstrip('.bam') + '.cons'
     statfilename = outfilename.rstrip('.bam') + '.hist'
     if len(cons) > 0:
-        startpos = min(list(cons.keys()))
-        endpos = max(list(cons.keys())) + 1
+        startpos = min(list(cons.keys())) #take the rightmost coordinate as start
+        endpos = max(list(cons.keys())) + 1 #take the leftmost coordinate as end
         with pysam.FastaFile(fasta) as f:
             ref_seq = get_reference_sequence(f, contig, startpos, endpos)
         with open(consfilename, 'w') as g:
@@ -167,6 +167,73 @@ def merge_cons(output_path, consfilelist, sample_name):
     for filename in consfilelist:
         os.remove(filename)
 
+def check_duplicate_positions(cons_file):
+    with open(cons_file) as f:
+        line = f.readline()
+        a = 13
+        b = 2
+        positions = []
+        duppos = []
+        for line in f:
+            parts = line.split('\t')
+            if parts[a] == '0':
+                if parts[b] in positions:
+                    duppos.append(parts[b])
+                positions.append(parts[b])    
+    return(duppos)
+
+def sum_lists(*args):
+    return(list(map(sum, zip(*args))))
+
+def merge_duplicate_positions(duppos,cons_file):
+    dupcons={}
+    a = 13
+    b = 2
+    with open(cons_file) as f:
+        line = f.readline()
+        for line in f:
+            parts = line.split('\t')
+            pos = parts[b]
+            if pos in duppos:
+                fsize = parts[a]
+                if pos not in dupcons:
+                    dupcons[pos] = {}
+                if fsize not in dupcons[pos]:
+                    dupcons[pos][fsize]=[]
+                dupcons[pos][fsize].append(line)
+    #print(dupcons)
+    newpos={}
+    for pos in dupcons:
+        newpos[pos]={}
+        for fsize in dupcons[pos]:
+            newpos[pos][fsize]=[0,0,0,0,0,0,0,0,0,0]
+            for s in dupcons[pos][fsize]:
+                parts=s.split('\t')
+                newpos[pos][fsize]=[int(a)+int(b) for a,b in zip(newpos[pos][fsize],parts[5:15])]
+    with open(cons_file) as f,open(cons_file+'_new', 'w') as g:
+        line = f.readline()
+        g.write(line)
+        positions=[]
+        fsizes=['0', '1', '2', '3', '4', '5', '7', '10', '20', '30']
+        for line in f:
+            parts=line.split('\t')
+            pos = parts[b]
+            if pos not in newpos:
+                g.write(line)
+            else:
+                if pos not in positions:
+                    for fsize in fsizes:
+                        if fsize in newpos[pos]:
+                            tmp = newpos[pos][fsize]
+                            newlist = [str(x) for x in tmp]
+                            consdict = { 'A': tmp[0], 'C': tmp[1], 'G':tmp[2], 'T': tmp[3], 'I': tmp[4], 'D': tmp[5], 'N': tmp[6]}
+                            mna, freq, count, tot = calc_major_nonref_allele_frequency(consdict, parts[4])
+                        #frac=(newpos[pos][fsize][9]/newpos[pos][fsize][7])*1.0
+                            g.write('\t'.join(parts[0:5])+'\t'+'\t'.join(newlist[0:8])+'\t'+fsize+'\t'+str(count)+'\t'+str(freq)+'\t'+mna+'\n')
+                    positions.append(pos)
+    
+    os.remove(cons_file)
+    os.rename(cons_file+'_new',cons_file)
 
 def merge_stat(output_path, statfilelist, sample_name):
     '''Merge all stat files in statfilelist and remove temporary files.'''
@@ -273,6 +340,11 @@ def run_umi_errorcorrect(args):
               args.num_threads)
     consfilelist = [x.rstrip('.bam') + '.cons' for x in bamfilelist]
     merge_cons(args.output_path, consfilelist, args.sample_name)
+    cons_file = args.output_path + '/' + args.sample_name + '.cons'
+    duppos = check_duplicate_positions(cons_file)
+    if any(duppos):
+        merge_duplicate_positions(duppos,cons_file)
+
     statfilelist = [x.rstrip('.bam') + '.hist' for x in bamfilelist]
     merge_stat(args.output_path, statfilelist, args.sample_name)
     logging.info("Consensus generation complete, output written to {}, {}".format(args.output_path + 
