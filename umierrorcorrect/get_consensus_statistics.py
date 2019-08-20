@@ -115,12 +115,14 @@ def calculate_target_coverage(stats,fsizes):
             reads_all[fsize] += region.umis[fsize]
             if region.name not in '':
                 reads_target[fsize] += region.umis[fsize]
+    lines = []
     for fsize in fsizes:
         if reads_all[fsize] > 0:
-            print(fsize, reads_target[fsize], reads_all[fsize], 1.0*(reads_target[fsize] / reads_all[fsize]))
+            lines.append('{}\t{}\t{}\t{}'.format(fsize, reads_target[fsize], reads_all[fsize], 1.0*(reads_target[fsize] / reads_all[fsize])))
         else:
-            print(fsize, reads_target[fsize], reads_all[fsize], 0)
+            lines.append('{}\t{}\t{}\t{}'.format(fsize, reads_target[fsize], reads_all[fsize], 0))
         
+    return('\n'.join(lines))
 
 
 def get_overall_statistics(hist,fsizes):
@@ -183,7 +185,9 @@ def run_get_consensus_statistics(output_path, consensus_filename, stat_filename,
         g.write(histall.write_stats()+'\n')
         for stat in hist:
             g.write(stat.write_stats()+'\n')
-    calculate_target_coverage(hist,fsizes)
+    outfilename = output_path + '/' + samplename + '_target_coverage.txt'
+    with open(outfilename, 'w') as g:
+        g.write(calculate_target_coverage(hist,fsizes))
     #print(hist)
     #plot_histogram(hist,output_path+'/histogram.png')
     logging.info('Finished consensus statistics')
