@@ -10,7 +10,7 @@ import argparse
 import glob
 import sys
 import logging
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 def parseArgs():
     '''Function for parsing arguments'''
@@ -118,16 +118,16 @@ def write_vcf(vcffile,rout,Qsig,reference):
             newline='\t'.join([parts[1], parts[2], '.', parts[4], parts[-1], str(q), vcffilter, 'DP={};AD={};AF={}'.format(parts[-5],parts[-3],parts[-2]),'DP',parts[-3]])
             g.write(newline+'\n')
 
-def plot_histogram(hist,plot_filename):
-    
-    num_bins=100
-    n,bins,patches=plt.hist(hist,num_bins,facecolor='dodgerblue',alpha=0.5)
-    plt.xlabel('Q-score')
-    plt.ylabel('Frequency')
-    plt.title('Histogram of Q-scores')
-    plt.box(False)
-    plt.xlim(0,100)
-    plt.savefig(plot_filename)
+#def plot_histogram(hist,plot_filename):
+#    
+#    num_bins=100
+#    n,bins,patches=plt.hist(hist,num_bins,facecolor='dodgerblue',alpha=0.5)
+#    plt.xlabel('Q-score')
+#    plt.ylabel('Frequency')
+#    plt.title('Histogram of Q-scores')
+#    plt.box(False)
+#    plt.xlim(0,100)
+#    plt.savefig(plot_filename)
 
 def get_sample_name(cons_name):
     '''Get the sample name as the basename of the input files.'''
@@ -154,7 +154,7 @@ def run_call_variants(args):
     a[np.isnan(a)]=1e-10
     Q = -10*np.log10(a)
     data=np.array(data)
-    plot_histogram(Q,args.output_path+'/'+args.sample_name+'.histogram.png')
+    #plot_histogram(Q,args.output_path+'/'+args.sample_name+'.histogram.png')
     if args.vc_method.lower()=='bbmodel':
         rout=data[Q>=args.qvalue_threshold]
         Qsig=Q[Q>=args.qvalue_threshold]
@@ -176,7 +176,7 @@ def main(filename,fsize,cutoff):
     a[np.isnan(a)]=1e-10
     Q = -10*np.log10(a)
     data=np.array(data)
-    plot_histogram(Q,'histogram.png')
+    #plot_histogram(Q,'histogram.png')
     rout=data[Q>=args.qvalue_threshold]
     Qsig=Q[Q>=args.qvalue_threshold]
     outfilename=filename.rstrip('.cons')+'.vcf'

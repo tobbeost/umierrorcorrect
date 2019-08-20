@@ -8,7 +8,7 @@ install_requires = ["pysam>=0.8.4"]
 
 
 setup(name='umierrorcorrect',
-      version='0.1',
+      version='0.12',
       description='UMI error correct',
       long_description = open('README.md').read(),
       url='http://github.com/tobbeost/umierrorcorrect',

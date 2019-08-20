@@ -7,7 +7,7 @@ from scipy.stats import beta
 from scipy.special import beta as B
 from scipy.special import comb
 import sys
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 def betaNLL(params,*args):
     a,b = params
@@ -71,16 +71,16 @@ def write_vcf(vcffile,rout,Qsig,reference):
         for r,q in zip(rout,Qsig):
             g.write(r+'\t'+str(q)+'\n')
 
-def plot_histogram(hist,plot_filename):
-    
-    num_bins=100
-    n,bins,patches=plt.hist(hist,num_bins,facecolor='dodgerblue',alpha=0.5)
-    plt.xlabel('Q-score')
-    plt.ylabel('Frequency')
-    plt.title('Histogram of Q-scores')
-    plt.box(False)
-    plt.xlim(0,100)
-    plt.savefig(plot_filename)
+#def plot_histogram(hist,plot_filename):
+#    
+#    num_bins=100
+#    n,bins,patches=plt.hist(hist,num_bins,facecolor='dodgerblue',alpha=0.5)
+#    plt.xlabel('Q-score')
+#    plt.ylabel('Frequency')
+#    plt.title('Histogram of Q-scores')
+#    plt.box(False)
+#    plt.xlim(0,100)
+#    plt.savefig(plot_filename)
 
 
 def main(filename,fsize,cutoff):
@@ -95,7 +95,7 @@ def main(filename,fsize,cutoff):
     a[np.isnan(a)]=1e-10
     Q = -10*np.log10(a)
     data=np.array(data)
-    plot_histogram(Q,'histogram.png')
+    #plot_histogram(Q,'histogram.png')
     rout=data[Q>=cutoff]
     Qsig=Q[Q>=cutoff]
     outfilename=filename.rstrip('.cons')+'.vcf'
