@@ -7,11 +7,12 @@ def parseArgs():
     parser.add_argument('-i', '--infile',dest='infile', help='Path to the input file, required', required=True)
     parser.add_argument('-d','--raw_depth', dest='raw_depth_cutoff',help='Raw depth cutoff, [default = %(default)s]',default='150')
     parser.add_argument('-f','--family_sizes', dest='family_sizes',help='Family sizes to include, separated by comma. default= %(default)s',default='0,1,2,3,4,5,7,10,20,30')
+    parser.add_argument('-write_raw', dest='writeraw',action='store_true',help='include this flag if raw reads should be included')
     args=parser.parse_args(sys.argv[1:])
     return(args)
 
 
-def filter_cons(filename,raw_depth_cutoff=150,fsizes='0,1,2,3,4,5,7,10,20,30'):
+def filter_cons(filename,raw_depth_cutoff=150,fsizes='0,1,2,3,4,5,7,10,20,30', writeraw=False):
     outfilename=filename[:-5]+'_filtered.cons'
     fs=fsizes.split(',')
     with open(filename) as f, open(outfilename,'w') as g:
@@ -20,13 +21,14 @@ def filter_cons(filename,raw_depth_cutoff=150,fsizes='0,1,2,3,4,5,7,10,20,30'):
         passdepth=False
         for line in f:
             parts=line.split('\t')
-            if parts[2] not in '':
-                pos=parts[1]
-                fsize=parts[-3]
+            if parts[3] not in '':
+                pos=parts[2]
+                fsize=parts[-4]
                 if fsize=='0':
-                    depth=int(parts[-4])
+                    depth=int(parts[-5])
                     if depth >= raw_depth_cutoff:
-                        g.write(line)
+                        if writeraw:
+                            g.write(line)
                         passdepth=True
                     else:
                         passdepth=False
@@ -36,6 +38,6 @@ def filter_cons(filename,raw_depth_cutoff=150,fsizes='0,1,2,3,4,5,7,10,20,30'):
 if __name__=='__main__':
     args=parseArgs()
     args.raw_depth_cutoff=int(args.raw_depth_cutoff)
-    filter_cons(args.infile,args.raw_depth_cutoff,args.family_sizes)
+    filter_cons(args.infile,args.raw_depth_cutoff,args.family_sizes,args.writeraw)
 
 
