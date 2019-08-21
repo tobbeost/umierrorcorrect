@@ -146,7 +146,7 @@ def run_call_variants(args):
     a1 = np.array(a1) 
     data = np.array(data)
     if args.vc_method.lower()=='count':
-        rout=data[a1 >= args.count_cutoff]
+        rout=data[a1 >= float(args.count_cutoff)]
         Qsig=['NA']*len(rout)
     result=get_beta_parameters(f1)
     a=prob_bb(n1,a1,result[0],result[1])
@@ -156,11 +156,11 @@ def run_call_variants(args):
     data=np.array(data)
     #plot_histogram(Q,args.output_path+'/'+args.sample_name+'.histogram.png')
     if args.vc_method.lower()=='bbmodel':
-        rout=data[Q>=args.qvalue_threshold]
-        Qsig=Q[Q>=args.qvalue_threshold]
+        rout=data[Q >= float(args.qvalue_threshold)]
+        Qsig=Q[Q >= float(args.qvalue_threshold)]
     else:
-        rout=data[a1 >= args.count_cutoff]
-        Qsig=Q[a1 >= args.count_cutoff]
+        rout=data[a1 >= float(args.count_cutoff)]
+        Qsig=Q[a1 >= float(args.count_cutoff)]
     outfilename=args.output_path+'/'+args.sample_name+'.vcf'
     write_vcf(outfilename,rout,Qsig,args.reference_file)
 
@@ -177,8 +177,8 @@ def main(filename,fsize,cutoff):
     Q = -10*np.log10(a)
     data=np.array(data)
     #plot_histogram(Q,'histogram.png')
-    rout=data[Q>=args.qvalue_threshold]
-    Qsig=Q[Q>=args.qvalue_threshold]
+    rout=data[Q>=float(args.qvalue_threshold)]
+    Qsig=Q[Q>=float(args.qvalue_threshold)]
     outfilename=filename.rstrip('.cons')+'.vcf'
     write_vcf(outfilename,rout,Qsig,'reference')
     for r,q in zip(rout,Qsig):
