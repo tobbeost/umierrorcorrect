@@ -40,5 +40,5 @@ Q<-calculate.bb.pvalue(x2)
 print(Q)
 #fdr<-p.adjust(pval,method="fdr")
 results<-cbind(x2,Q)
-write.table(results[Q>40,],outfilename,sep='\t',row.names=FALSE,quote=FALSE)
+write.table(results[Q>20,],outfilename,sep='\t',row.names=FALSE,quote=FALSE)
 
