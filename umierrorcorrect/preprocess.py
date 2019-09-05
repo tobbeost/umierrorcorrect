@@ -193,8 +193,10 @@ def run_preprocessing(args):
         nseqs = preprocess_pe(r1file, r2file, outfile1, outfile2, args.umi_length, args.spacer_length, args.dual_index)
         run_pigz(outfile1, args.num_threads,args.gziptool)
         run_pigz(outfile2, args.num_threads,args.gziptool)
-        os.remove(r1file)
-        os.remove(r2file)
+        if os.path.isfile(r1file):
+            os.remove(r1file)
+        if os.path.isfile(r2file):
+            os.remove(r2file)
         os.rmdir(newtmpdir)
         fastqfiles=[outfile1 + '.gz', outfile2 + '.gz']
     logging.info("Finished preprocessing")
