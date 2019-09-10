@@ -227,7 +227,8 @@ def merge_duplicate_positions(duppos,cons_file):
                             tmp = newpos[pos][fsize]
                             newlist = [str(x) for x in tmp]
                             consdict = { 'A': tmp[0], 'C': tmp[1], 'G':tmp[2], 'T': tmp[3], 'I': tmp[4], 'D': tmp[5], 'N': tmp[6]}
-                            mna, freq, count, tot = calc_major_nonref_allele_frequency(consdict, parts[4])
+                            tot = sum(consdict.values())
+                            mna, freq, count = calc_major_nonref_allele_frequency(consdict, parts[4], tot)
                         #frac=(newpos[pos][fsize][9]/newpos[pos][fsize][7])*1.0
                             g.write('\t'.join(parts[0:5])+'\t'+'\t'.join(newlist[0:8])+'\t'+fsize+'\t'+str(count)+'\t'+str(freq)+'\t'+mna+'\n')
                     positions.append(pos)
