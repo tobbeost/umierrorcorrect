@@ -23,9 +23,9 @@ def filter_cons(filename,raw_depth_cutoff=150,fsizes='0,1,2,3,4,5,7,10,20,30', w
             parts=line.split('\t')
             if parts[3] not in '':
                 pos=parts[2]
-                fsize=parts[-4]
+                fsize=parts[13]
                 if fsize=='0':
-                    depth=int(parts[-5])
+                    depth=int(parts[12])
                     if depth >= raw_depth_cutoff:
                         if writeraw:
                             g.write(line)
