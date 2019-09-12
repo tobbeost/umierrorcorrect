@@ -109,7 +109,7 @@ def main(args):
     run_umi_errorcorrect(args)  #run umi errorcorrect
     cons_bam = args.output_path + '/' + args.sample_name + '_consensus_reads.bam'
     stat_filename = args.output_path + '/' + args.sample_name + '.hist'
-    run_get_consensus_statistics(args.output_path, cons_bam, stat_filename, args.sample_name)
+    #run_get_consensus_statistics(args.output_path, cons_bam, stat_filename, args.sample_name)
 
     logging.info("Finished UMI Error Correct")
 

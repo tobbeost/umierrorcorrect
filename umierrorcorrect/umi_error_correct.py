@@ -121,15 +121,15 @@ def cluster_consensus_worker(args):
         g = open(consfilename, 'w')
         g.close()
     #Write to hist/stat file
-    if len(cons) > 0:
-        with open(statfilename, 'w') as g2:
-            name=get_overlap(annotations, start, endpos)
-            regionname = '{}:{}-{}'.format(contig, start, endpos)
-            g2.write('\t'.join([str(regionid), regionname, name, 'consensus_reads: ' + str(num_cons),  
-                                'singletons: ' + str(len(singleton_matrix))]) + '\n')
-    else:  # empty file
-        g = open(statfilename, 'w')
-        g.close()
+    #if len(cons) > 0:
+    #    with open(statfilename, 'w') as g2:
+    #        name=get_overlap(annotations, start, endpos)
+    #        regionname = '{}:{}-{}'.format(contig, start, endpos)
+    #        g2.write('\t'.join([str(regionid), regionname, name, 'consensus_reads: ' + str(num_cons),  
+    #                            'singletons: ' + str(len(singleton_matrix))]) + '\n')
+    #else:  # empty file
+    #    g = open(statfilename, 'w')
+    #    g.close()
 
 def update_bam_header(bamfile, samplename):
     with pysam.AlignmentFile(bamfile,'rb') as f:
@@ -346,8 +346,8 @@ def run_umi_errorcorrect(args):
     if any(duppos):
         merge_duplicate_positions(duppos,cons_file)
 
-    statfilelist = [x.rstrip('.bam') + '.hist' for x in bamfilelist]
-    merge_stat(args.output_path, statfilelist, args.sample_name)
+    #statfilelist = [x.rstrip('.bam') + '.hist' for x in bamfilelist]
+    #merge_stat(args.output_path, statfilelist, args.sample_name)
     logging.info("Consensus generation complete, output written to {}, {}".format(args.output_path + 
                  '/' + args.sample_name + '_consensus_reads.bam',
                  args.output_path + '/' + args.sample_name + '.cons'))
