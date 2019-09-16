@@ -12,12 +12,12 @@ Run the pipeline
 '''
 
 import sys
-from umierrorcorrect.src.handle_sequences import read_fastq, read_fastq_paired_end
-from umierrorcorrect.preprocess import run_preprocessing
-from umierrorcorrect.run_mapping import run_mapping
-from umierrorcorrect.umi_error_correct import run_umi_errorcorrect
-from umierrorcorrect.src.check_args import check_args_fastq, check_args_bam, get_sample_name
-from umierrorcorrect.get_consensus_statistics import run_get_consensus_statistics
+from src.handle_sequences import read_fastq, read_fastq_paired_end
+from preprocess import run_preprocessing
+from run_mapping import run_mapping
+from umi_error_correct import run_umi_errorcorrect
+from src.check_args import check_args_fastq, check_args_bam, get_sample_name
+from get_consensus_statistics import run_get_consensus_statistics
 import argparse
 import os
 import logging
