@@ -291,6 +291,7 @@ def cluster_umis_on_position(bamfilename, position_threshold, group_method, bedf
     #position_threshold = 20
     # group_method='fromBed'
     # group_method='automatic'
+    position_threshold=int(position_threshold)
     if group_method == 'fromBed':
         regions, ends = read_bam_from_bed(bamfilename, bedfilename, position_threshold)
     else:
