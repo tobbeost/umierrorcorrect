@@ -286,7 +286,7 @@ def cluster_umis_all_regions(regions, ends, edit_distance_threshold, samplename,
     return(bamfilelist)
 
 
-def cluster_umis_on_position(bamfilename, position_threshold=20, group_method, bedfilename=None):
+def cluster_umis_on_position(bamfilename, position_threshold, group_method, bedfilename=None):
     '''Function for cluster umis on position'''
     #position_threshold = 20
     # group_method='fromBed'
