@@ -37,7 +37,7 @@ def parseArgs():
     parser.add_argument('-d', '--edit_distance', dest='edit_distance_threshold', 
                         help="Edit distance threshold for UMI clustering, [default = %(default)s]", default=1)
     parser.add_argument('-p', '--position_threshold', dest='position_threshold', 
-                        help='Position threshold for grouping by position [default = %(default)s]', default=10)
+                        help='Position threshold for grouping by position [default = %(default)s]', default=20)
     parser.add_argument('-cons_freq', '--consensus_frequency_threshold', dest='consensus_frequency_threshold', 
                         help='Minimum percent of the majority base at a position for consensus to be called. \
                               [default = %(default)s]', default=60.0)
@@ -286,9 +286,9 @@ def cluster_umis_all_regions(regions, ends, edit_distance_threshold, samplename,
     return(bamfilelist)
 
 
-def cluster_umis_on_position(bamfilename, position_threshold, group_method, bedfilename=None):
+def cluster_umis_on_position(bamfilename, position_threshold=20, group_method, bedfilename=None):
     '''Function for cluster umis on position'''
-    position_threshold = 20
+    #position_threshold = 20
     # group_method='fromBed'
     # group_method='automatic'
     if group_method == 'fromBed':
