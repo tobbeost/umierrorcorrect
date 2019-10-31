@@ -8,8 +8,8 @@ Installation
 To install the UMI-errorcorrect pipeline, open a terminal and type the following:
 
 ```bash
-wget https://github.com/tobbeost/umierrorcorrect/archive/v0.1.tar.gz
-pip install v0.1.tar.gz
+wget https://github.com/tobbeost/umierrorcorrect/archive/v0.12.tar.gz
+pip install v0.12.tar.gz
 ```
 
 After installation, try to run the pipeline:
