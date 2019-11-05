@@ -371,7 +371,7 @@ def main(bamfilename):
         for cons_read in consensus_seq.values():
             if cons_read:
                 cons_read.write_to_bam(g)
-        write_singleton_reads(singleton_matrix, '17', g)
+        write_singleton_reads(singleton_matrix, 'chr1', g)
 
 
 
