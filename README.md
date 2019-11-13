@@ -5,32 +5,9 @@ Pipeline for analyzing  barcoded amplicon sequencing data with Unique molecular 
 Installation
 ------------
 
-### Alternative a) Run via Docker
+To run Umierrorcorrect via Docker, see the [Docker documentation](doc/docker.md).
 
-If you have Docker installed, pull the Docker image from Docker hub.
-
-```bash
-docker pull tobiasosterlund/umierrorcorrect
-```
-
-Download a reference genome fasta file and mount the reference directory and data directory (including fastq files) to the docker container:
-
-```bash
-docker run -it tobiasosterlund/umierrorcorrect -v /path_to_reference_fasta_directory/:/references/ \\
--v /path_to_data_directory/:/data/
-```
-To try to run the pipeline:
-
-```bash
-run_umierrorcorrect.py -h
-cd /data/
-```
-
-See below for information about how to run the pipeline and how to index the reference genome with bwa.
-
-### Alternative b) Install from source
-
-To install the UMI-errorcorrect pipeline, open a terminal and type the following:
+To install the UMI-errorcorrect pipeline from source, open a terminal and type the following:
 
 ```bash
 wget https://github.com/tobbeost/umierrorcorrect/archive/v0.12.tar.gz
