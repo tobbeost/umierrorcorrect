@@ -9,8 +9,9 @@ docker pull tobiasosterlund/umierrorcorrect
 Download a reference genome fasta file and mount the reference directory and data directory (including fastq files and BED files) to the docker container:
 
 ```bash
-docker run -it tobiasosterlund/umierrorcorrect -v /path_to_reference_fasta_directory/:/references/ \\
--v /path_to_data_directory/:/data/
+docker run -v /path_to_reference_fasta_directory/:/references/ \\
+-v /path_to_data_directory/:/data/ \\
+-it tobiasosterlund/umierrorcorrect
 ```
 To try to run the pipeline:
 
