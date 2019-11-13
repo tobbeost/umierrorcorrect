@@ -22,5 +22,9 @@ Since the umierrorcorrect pipeline is using `bwa` for mapping of reads, a bwa-in
 
 Change the path to the data directory and run the pipeline. 
 Example syntax for running the whole pipeline:
-    cd /data
-    run_umierrorcorrect.py -r1 read1.fastq.gz -r2 read2.fastq.gz -ul umi_length -sl spacer_length -r /references/reference.fa -o output_directory
+
+```bash
+cd /data
+run_umierrorcorrect.py -r1 read1.fastq.gz -r2 read2.fastq.gz -ul umi_length -sl spacer_length -r /references/reference.fa -o output_directory
+```
+
