@@ -5,7 +5,7 @@ Pipeline for analyzing  barcoded amplicon sequencing data with Unique molecular 
 Installation
 ------------
 
-### Alternative a) Run via Docker.
+### Alternative a) Run via Docker
 
 If you have Docker installed, pull the Docker image from Docker hub.
 
@@ -91,7 +91,8 @@ filter_cons.py -h
 Tutorial
 --------
 
-[Link to the Umierrorcorrect tutorial](wiki/Tutorial)
+[Link to the Umierrorcorrect tutorial](https://github.com/tobbeost/umierrorcorrect/wiki/Tutorial)
+
 
 
 
