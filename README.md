@@ -94,5 +94,7 @@ Tutorial
 [Link to the Umierrorcorrect tutorial](https://github.com/tobbeost/umierrorcorrect/wiki/Tutorial)
 
 
+Example of UMI definition options
+----------------------------------
 
-
+[UMI definition options](https://github.com/tobbeost/umierrorcorrect/wiki/UMI-definition-options)
