@@ -97,7 +97,7 @@ class consensus_read:
             s=self.splits[-1]
             a = pysam.AlignedSegment()
             a.query_name = self.name + '_b'
-            start = self.splits[-2][1] - self.start_pos
+            start = self.splits[-1] - self.start_pos
             a.query_sequence = self.seq[start:]
             a.flag = 0
             a.reference_id = f.references.index(self.contig)
@@ -258,6 +258,9 @@ def getConsensus3(group_seqs, contig, regionid, indel_freq_threshold, umi_info, 
         for pos in sorted(consensus_sorted):
             if pos not in skippos:
                 if not pos == prevpos + 1 and prevpos+1 not in skippos:
+                    for i in range(prevpos+1,pos):
+                        if i not in skippos:
+                            consread.add_base('N', get_ascii(0))
                     consread.split_read(prevpos+1,pos)
                 if 'I' in consensus[pos]:
                     # first add the insertion if it is in the majority of the reads, then add the base at the next position
@@ -309,6 +312,11 @@ def getConsensus3(group_seqs, contig, regionid, indel_freq_threshold, umi_info, 
                                     add_consensus = False
                     else:
                         consread.add_base(cons_base, get_ascii(cons_qual))
+                #if umi_info.centroid == 'TCCTCACG':
+                #        print(consread.start_pos,consread.splits)
+                #        print(consread.seq)
+                #        print(consread.qual)
+                #        print(consread.cigarstring)
             prevpos=pos
 
         if add_consensus:
@@ -357,21 +365,24 @@ def write_singleton_reads(singleton_matrix, region_id, g):
 
 
 def main(bamfilename):
-    contig='chr1'
-    start=9752204
-    end=9752892
-    regions, ends = readBam(bamfilename, 20)
+    contig='2'
+    start=29451496
+    #start = 29451684
+    #start=29451796
+    end=29451946
+    regions, ends = readBam(bamfilename, 60)
+    print(regions['2'].keys())
     umi_dict=regions[contig][start]
     adj_matrix = cluster_barcodes(umi_dict, 1)
     clusters = get_connected_components(umi_dict, adj_matrix)
     umis = merge_clusters(umi_dict, clusters)
     position_matrix, singleton_matrix = get_cons_dict(bamfilename, umis, contig, start, end, True)
     consensus_seq = get_all_consensus(position_matrix, umis, contig,'0',60.0,60.0)
-    with pysam.AlignmentFile(bamfilename, 'rb') as f, pysam.AlignmentFile('consensus_out.bam', 'wb', template=f) as g:
+    with pysam.AlignmentFile(bamfilename, 'rb') as f, pysam.AlignmentFile('consensus_out2333.bam', 'wb', template=f) as g:
         for cons_read in consensus_seq.values():
-            if cons_read:
+            if cons_read and 'TCCTCACG' in cons_read.name:
                 cons_read.write_to_bam(g)
-        write_singleton_reads(singleton_matrix, 'chr1', g)
+        #write_singleton_reads(singleton_matrix, '2', g)
 
 
 
