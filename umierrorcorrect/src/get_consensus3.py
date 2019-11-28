@@ -77,15 +77,21 @@ class consensus_read:
             a.tags = (("NM", self.nmtag), ("RG", "L1"))
             f.write(a)
         else:
-            for s in self.splits[:-1]:
+            for i,s in enumerate(self.splits):
                 a = pysam.AlignedSegment()
-                a.query_name = self.name + '_a'
-                start = s[0] - self.start_pos          
-                end = s[1] - self.start_pos
+                parts=self.name.split('_Count=')
+                a.query_name = parts[0]+'_'+chr(i+97)+'_Count='+parts[1]
+                if type(s) is tuple:
+                    start = s[0] - self.start_pos          
+                    end = s[1] - self.start_pos
+                    a.reference_start = s[0]
+                else:
+                    start = s -self.start_pos
+                    end = len(self.seq)
+                    a.reference_start = s
                 a.query_sequence = self.seq[start:end]
                 a.flag = 0
                 a.reference_id = f.references.index(self.contig)
-                a.reference_start = s[0]
                 a.mapping_quality = 60
                 groups = groupby(self.cigarstring[start:end])
                 cigar = tuple((int(label),
@@ -94,22 +100,22 @@ class consensus_read:
                 a.query_qualities = pysam.qualitystring_to_array(self.qual)[start:end]
                 a.tags = (("NM", self.nmtag), ("RG", "L1"))
                 f.write(a)
-            s=self.splits[-1]
-            a = pysam.AlignedSegment()
-            a.query_name = self.name + '_b'
-            start = self.splits[-1] - self.start_pos
-            a.query_sequence = self.seq[start:]
-            a.flag = 0
-            a.reference_id = f.references.index(self.contig)
-            a.reference_start = s
-            a.mapping_quality = 60
-            groups = groupby(self.cigarstring[start:])
-            cigar = tuple((int(label),
-                           sum(1 for _ in group)) for label, group in groups)
-            a.cigar = cigar
-            a.query_qualities = pysam.qualitystring_to_array(self.qual)[start:]
-            a.tags = (("NM", self.nmtag), ("RG", "L1"))
-            f.write(a)
+            #s=self.splits[-1]
+            #a = pysam.AlignedSegment()
+            #a.query_name = self.name + '_b'
+            #start = self.splits[-1] - self.start_pos
+            #a.query_sequence = self.seq[start:]
+            #a.flag = 0
+            #a.reference_id = f.references.index(self.contig)
+            #a.reference_start = s
+            #a.mapping_quality = 60
+            #groups = groupby(self.cigarstring[start:])
+            #cigar = tuple((int(label),
+            #               sum(1 for _ in group)) for label, group in groups)
+            #a.cigar = cigar
+            #a.query_qualities = pysam.qualitystring_to_array(self.qual)[start:]
+            #a.tags = (("NM", self.nmtag), ("RG", "L1"))
+            #f.write(a)
 
 
 def get_reference_sequence(fasta, chrx, start, stop):
@@ -378,7 +384,7 @@ def main(bamfilename):
     umis = merge_clusters(umi_dict, clusters)
     position_matrix, singleton_matrix = get_cons_dict(bamfilename, umis, contig, start, end, True)
     consensus_seq = get_all_consensus(position_matrix, umis, contig,'0',60.0,60.0)
-    with pysam.AlignmentFile(bamfilename, 'rb') as f, pysam.AlignmentFile('consensus_out2333.bam', 'wb', template=f) as g:
+    with pysam.AlignmentFile(bamfilename, 'rb') as f, pysam.AlignmentFile('consensus_out23.bam', 'wb', template=f) as g:
         for cons_read in consensus_seq.values():
             if cons_read and 'TCCTCACG' in cons_read.name:
                 cons_read.write_to_bam(g)
