@@ -4,7 +4,7 @@ from setuptools import find_packages
 
 pack = find_packages() 
 
-install_requires = ["pysam>=0.8.4"]
+install_requires = ["pysam>=0.8.4","scipy"]
 
 
 setup(name='umierrorcorrect',
@@ -25,6 +25,7 @@ setup(name='umierrorcorrect',
                 'umierrorcorrect/run_mapping.py',
                 'umierrorcorrect/umi_error_correct.py',
                 'umierrorcorrect/get_consensus_statistics.py',
+                'umierrorcorrect/call_variants6.py',
                 'umierrorcorrect/filter_bam.py',
                 'umierrorcorrect/filter_cons.py'],
       zip_safe=False)

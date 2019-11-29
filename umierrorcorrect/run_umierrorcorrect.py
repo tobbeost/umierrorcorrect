@@ -18,6 +18,7 @@ from umierrorcorrect.run_mapping import run_mapping
 from umierrorcorrect.umi_error_correct import run_umi_errorcorrect
 from umierrorcorrect.src.check_args import check_args_fastq, check_args_bam, get_sample_name
 from umierrorcorrect.get_consensus_statistics import run_get_consensus_statistics
+from umierrorcorrect.call_variants6 import run_call_variants
 import argparse
 import os
 import logging
@@ -80,14 +81,29 @@ def parseArgs():
                         help='Include this flag if singleton reads should be included in the output consensus \
                               read bam file. Note that the singletons will not be error corrected')
     
-    group5 = parser.add_argument_group('Running parameters')
-    group5.add_argument('-tmpdir', '--tmp_dir', dest='tmpdir',
+    group5 = parser.add_argument_group('Variant calling options')
+    group5.add_argument('-fs','--fsize', dest='fsize', 
+                        help='Family size cutoff (consensus cutoff) for variant calling. [default = %(default)s]', 
+                        default=3)
+    group5.add_argument('-method','--vc-method',dest='vc_method',
+                        help="Variant calling method, Either 'count' or 'bbmodel'. [default = %(default)s]", 
+                        default='count')
+    group5.add_argument('-count','--count_cutoff', dest='count_cutoff',
+                        help="Consensus read count cutoff (minimum variant allele depth) for calling a variant if method=count [default = %(default)s]", 
+                        default=5)
+                        
+    group5.add_argument('-Q', '--qscore_cutoff', dest='qvalue_threshold',
+                        help='Qscore threshold (Minimum variant significance score) for Variant calling, only if method=bbmodel [default = %(default)s]', 
+                        default=20)
+
+    group6 = parser.add_argument_group('Running parameters')
+    group6.add_argument('-tmpdir', '--tmp_dir', dest='tmpdir',
                         help="temp directory where the temporary files are written and then removed. \
                               Should be the scratch directory on the node. Default is a temp directory \
                               in the output folder.")
-    group5.add_argument('-f', '--force', dest='force',action='store_true',
+    group6.add_argument('-f', '--force', dest='force',action='store_true',
                         help='Include this flag to force output files to be overwritten')
-    group5.add_argument('-t', '--num_threads', dest='num_threads', 
+    group6.add_argument('-t', '--num_threads', dest='num_threads', 
                         help='Number of threads to run the program on. Default=%(default)s', default='1')
     args = parser.parse_args(sys.argv[1:])
     logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
@@ -110,7 +126,7 @@ def main(args):
     cons_bam = args.output_path + '/' + args.sample_name + '_consensus_reads.bam'
     stat_filename = args.output_path + '/' + args.sample_name + '.hist'
     run_get_consensus_statistics(args.output_path, cons_bam, stat_filename, args.sample_name)
-
+    run_call_variants(args)
     logging.info("Finished UMI Error Correct")
 
 if __name__ == '__main__':
