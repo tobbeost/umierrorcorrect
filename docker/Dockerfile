@@ -35,6 +35,7 @@ RUN apt-get update \
     bwa && \
     pip3 install wheel && \
     pip3 install pysam && \
+    pip3 install scipy && \
     pip3 install /etc/v0.12.tar.gz
 
 
