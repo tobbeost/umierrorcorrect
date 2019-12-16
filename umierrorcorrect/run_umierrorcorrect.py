@@ -18,7 +18,7 @@ from umierrorcorrect.run_mapping import run_mapping
 from umierrorcorrect.umi_error_correct import run_umi_errorcorrect
 from umierrorcorrect.src.check_args import check_args_fastq, check_args_bam, get_sample_name
 from umierrorcorrect.get_consensus_statistics import run_get_consensus_statistics
-from umierrorcorrect.call_variants6 import run_call_variants
+from umierrorcorrect.call_variants9 import run_call_variants
 import argparse
 import os
 import logging
