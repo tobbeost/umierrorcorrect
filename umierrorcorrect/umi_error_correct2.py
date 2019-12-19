@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from umierrorcorrect.src.group import readBam, read_bam_from_bed
-from umierrorcorrect.src.umi_cluster import cluster_barcodes, get_connected_components, merge_clusters
-from umierrorcorrect.src.get_consensus3 import get_cons_dict, get_all_consensus, write_singleton_reads, get_reference_sequence
-from umierrorcorrect.src.get_cons_info import get_cons_info, write_consensus, calc_major_nonref_allele_frequency
-from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, merge_regions, get_overlap
+from src.umi_cluster import cluster_barcodes, get_connected_components, merge_clusters
+from src.get_consensus3 import get_cons_dict, get_all_consensus, write_singleton_reads, get_reference_sequence
+from src.get_cons_info import get_cons_info, write_consensus, calc_major_nonref_allele_frequency
+from src.get_regions_from_bed import read_bed, sort_regions, merge_regions, get_overlap
 import sys
 import os
 import pysam
@@ -171,7 +171,7 @@ def merge_cons(output_path, consfilelist, sample_name):
 def check_duplicate_positions(cons_file):
     with open(cons_file) as f, open('tmp.txt','w') as g:
         f.readline()
-        for line in f:
+        for line in f: 
             parts=line.split('\t')
             if parts[13]=='0':
                 g.write(' '.join(parts[1:3])+'\n')
@@ -185,7 +185,6 @@ def check_duplicate_positions(cons_file):
         for line in f:
             line=line.rstrip()
             duppos.append(line)
-    os.remove('tmp2.txt')
     return(duppos)
 
 def sum_lists(*args):
@@ -239,7 +238,7 @@ def merge_duplicate_positions(duppos,cons_file):
                         #frac=(newpos[pos][fsize][9]/newpos[pos][fsize][7])*1.0
                             g.write('\t'.join(parts[0:5])+'\t'+'\t'.join(newlist[0:8])+'\t'+fsize+'\t'+str(count)+'\t'+str(freq)+'\t'+mna+'\n')
                     positions.append(pos)
-
+    
     os.remove(cons_file)
     os.rename(cons_file+'_new',cons_file)
 
@@ -364,5 +363,13 @@ def main(args):
     run_umi_errorcorrect(args)
 
 if __name__ == '__main__':
-    args = parseArgs()
-    main(args)
+    import sys
+    cons_file=sys.argv[1]
+    check_duplicate_positions(cons_file)
+    #merge_duplicate_positions(duppos,cons_file)
+    #if any(duppos):
+    #    with open('test.txt','w') as g:
+    #        for chrx in duppos:
+    #            print(','.join(duppos[chrx])+'\n')
+    #args = parseArgs()
+    #main(args)
