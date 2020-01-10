@@ -58,18 +58,18 @@ def parse_cons_file(filename,fsize=3):
             pos=parts[2]
             name=parts[3]
             #print(name)
-            if name not in "":
-                famsize=parts[-4]
-                if int(famsize)==fsize:
-                    frac=float(parts[-2])
-                    alt=parts[-1]
-                    count=parts[-3]
-                    if frac > 0 and alt not in 'N':
-                        cov=int(parts[-5])
-                        f1.append(float(frac))
-                        n1.append(int(cov))
-                        c1.append(int(count))
-                        data.append(line)
+            #if name not in "":
+            famsize=parts[-4]
+            if int(famsize)==fsize:
+                frac=float(parts[-2])
+                alt=parts[-1]
+                count=parts[-3]
+                if frac > 0 and alt not in 'N':
+                    cov=int(parts[-5])
+                    f1.append(float(frac))
+                    n1.append(int(cov))
+                    c1.append(int(count))
+                    data.append(line)
                 #print(name)
                 #print(famsize)
     return(f1,n1,c1,data)
