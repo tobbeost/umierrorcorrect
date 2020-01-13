@@ -36,6 +36,7 @@ RUN apt-get update \
     pip3 install wheel && \
     pip3 install pysam && \
     pip3 install scipy && \
+    pip3 install matplotlib && \
     pip3 install /etc/v0.13.tar.gz
 
 
