@@ -16,6 +16,7 @@ setup(name='umierrorcorrect',
       author='Tobias Osterlund',
       author_email='tobias.osterlund@gu.se',
       packages=pack,
+      license='mit',
       package_data={'umierrorcorrect': ['README.md']
                    },
       include_package_data=True,
