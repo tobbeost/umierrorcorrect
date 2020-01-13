@@ -4,6 +4,7 @@ from umierrorcorrect.src.umi_cluster import cluster_barcodes, get_connected_comp
 from umierrorcorrect.src.get_consensus3 import get_cons_dict, get_all_consensus, write_singleton_reads, get_reference_sequence
 from umierrorcorrect.src.get_cons_info import get_cons_info, write_consensus, calc_major_nonref_allele_frequency
 from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, merge_regions, get_overlap
+from umierrorcorrect.version import __version__
 import sys
 import os
 import pysam
@@ -14,9 +15,10 @@ import logging
 
 def parseArgs():
     '''Function for parsing arguments'''
-    parser = argparse.ArgumentParser(description="Pipeline for analyzing barcoded amplicon \
+    parser = argparse.ArgumentParser(description="UmiErrorCorrect v. {}. \
+                                                  Pipeline for analyzing barcoded amplicon \
                                                   sequencing data with Unique molecular \
-                                                  identifiers (UMI)")
+                                                  identifiers (UMI)".format(__version__))
     parser.add_argument('-o',  '--output_path', dest='output_path', 
                         help='Path to the output directory, required', required=True)
     parser.add_argument('-b', '--bam', dest='bam_file', help='Path to BAM-file')

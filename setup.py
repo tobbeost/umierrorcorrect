@@ -6,9 +6,10 @@ pack = find_packages()
 
 install_requires = ["pysam>=0.8.4","scipy"]
 
+exec(open('umierrorcorrect/version.py').read())
 
 setup(name='umierrorcorrect',
-      version='0.12',
+      version=__version__,
       description='UMI error correct',
       long_description = open('README.md').read(),
       url='http://github.com/tobbeost/umierrorcorrect',

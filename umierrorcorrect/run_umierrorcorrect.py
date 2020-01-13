@@ -19,13 +19,14 @@ from umierrorcorrect.umi_error_correct import run_umi_errorcorrect
 from umierrorcorrect.src.check_args import check_args_fastq, check_args_bam, get_sample_name
 from umierrorcorrect.get_consensus_statistics import run_get_consensus_statistics
 from umierrorcorrect.call_variants9 import run_call_variants
+from umierrorcorrect.version import __version__
 import argparse
 import os
 import logging
 
 def parseArgs():
-    parser = argparse.ArgumentParser(description="Pipeline for analyzing  barcoded amplicon sequencing data with \
-                                                  Unique molecular identifiers (UMI)")
+    parser = argparse.ArgumentParser(description="UmiErrorCorrect v. {}. Pipeline for analyzing  barcoded amplicon sequencing data with \
+                                                  Unique molecular identifiers (UMI)".format(__version__))
     group1 = parser.add_argument_group('Input and output files options')
     group1.add_argument('-o', '--output_path', dest='output_path', 
                         help='Path to the output directory, required', required=True)

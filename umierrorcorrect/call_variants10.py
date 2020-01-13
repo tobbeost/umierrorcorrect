@@ -11,12 +11,14 @@ import glob
 import sys
 import logging
 import matplotlib.pyplot as plt
+from umierrorcorrect.version import __version__
 
 def parseArgs():
     '''Function for parsing arguments'''
-    parser = argparse.ArgumentParser(description="Pipeline for analyzing barcoded amplicon \
+    parser = argparse.ArgumentParser(description="UmiErrorCorrect v. {} . \
+                                                  Pipeline for analyzing barcoded amplicon \
                                                   sequencing data with Unique molecular \
-                                                  identifiers (UMI)")
+                                                  identifiers (UMI)".format(__version__))
     parser.add_argument('-o',  '--output_path', dest='output_path',
                         help='Path to the output directory, required', required=True)
     parser.add_argument('-cons', '--cons_file', dest='cons_file', help='Path to cons file')

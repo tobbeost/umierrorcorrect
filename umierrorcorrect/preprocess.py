@@ -22,7 +22,7 @@ import subprocess
 
 
 def parseArgs():
-    parser = argparse.ArgumentParser(description="Pipeline for analyzing  barcoded amplicon sequencing data with \
+    parser = argparse.ArgumentParser(description="UmiErrorCorrect v.{} Pipeline for analyzing  barcoded amplicon sequencing data with \
                                                   Unique molecular identifiers (UMI)")
     parser.add_argument('-o', '--output_path', dest='output_path', help='Path to the output directory, required', 
                          required=True)

@@ -5,13 +5,14 @@ import argparse
 #import matplotlib.pyplot as plt
 import logging
 from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, merge_regions, get_annotation
-
+from umierrorcorrect.version import __version__
 
 def parseArgs():
     '''Function for parsing arguments'''
-    parser = argparse.ArgumentParser(description="Pipeline for analyzing barcoded amplicon \
+    parser = argparse.ArgumentParser(description="UmiErrorCorrect v. {}. \
+                                                  Pipeline for analyzing barcoded amplicon \
                                                   sequencing data with Unique molecular \
-                                                  identifiers (UMI)")
+                                                  identifiers (UMI)".format(__version__))
     parser.add_argument('-o',  '--output_path', dest='output_path',
                         help='Path to the output directory, required', required=True)
     parser.add_argument('-c', '--cons_bam', dest='cons_bam_file', help='Path to the consensus BAM-file')
