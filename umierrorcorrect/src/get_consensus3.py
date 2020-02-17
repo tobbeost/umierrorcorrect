@@ -158,10 +158,12 @@ def calc_consensus(base, cons_pos):
     for nucl in cons_pos:
         if nucl in base:
             for phred in cons_pos[nucl]:
-                prod = prod*(1 - (10**(-phred/10)))
+                if not phred == 0:
+                    prod = prod*(1 - (10**(-phred/10)))
         if nucl not in base and nucl in 'ATCG':
             for phred in cons_pos[nucl]:
-                prod = prod*(10**(-phred/10))
+                if not phred == 0:
+                    prod = prod*(10**(-phred/10))
     return(prod)
 
 
@@ -183,6 +185,8 @@ def calc_consensus_probabilities(cons_pos):
             cons_phred = 60
     return(cons_base, cons_phred)
 
+def get_position_coverage(covpos):
+    return(sum([len(x) for x in covpos.values()]))
 
 def getConsensus3(group_seqs, contig, regionid, indel_freq_threshold, umi_info, consensus_freq_threshold):
     '''Takes a list of pysam entries (rows in the BAM file) as input and generates a consensus sequence.'''
@@ -256,73 +260,76 @@ def getConsensus3(group_seqs, contig, regionid, indel_freq_threshold, umi_info, 
     if len(consensus) > 0:
         #generate the consensus sequence
         consensus_sorted = sorted(consensus)
-        consread = consensus_read(contig, regionid, consensus_sorted[0], umi_info.centroid, umi_info.count)
-        
+        consread = None
         add_consensus = True
         skippos = [] #if position is del
         prevpos = consensus_sorted[0] - 1
         for pos in sorted(consensus_sorted):
             if pos not in skippos:
-                if not pos == prevpos + 1 and prevpos+1 not in skippos:
-                    for i in range(prevpos+1,pos):
-                        if i not in skippos:
-                            consread.add_base('N', get_ascii(0))
-                    consread.split_read(prevpos+1,pos)
-                if 'I' in consensus[pos]:
-                    # first add the insertion if it is in the majority of the reads, then add the base at the next position
-                    cons_dict = consensus[pos]['I']
-                    cons_allele = max(cons_dict, key=cons_dict.get)
-                    cons_num = cons_dict[cons_allele]
-                    percent = (cons_num / len(group_seqs))*100.0
-                    if percent >= indel_freq_threshold:
-                        sequence = cons_allele
-                        consread.add_insertion(sequence)
-                    del(consensus[pos]['I'])
-                    cons_base, cons_qual = calc_consensus_probabilities(consensus[pos])
-                    consread.add_base(cons_base, get_ascii(cons_qual))
-
-                elif 'D' in consensus[pos]:
-                    # add the deletions
-                    a, percent = get_most_common_allele(consensus[pos])
-                    if a.startswith('D'):
+                poscov=get_position_coverage(consensus[pos])
+                if poscov >= 2:
+                    if not consread:
+                        consread = consensus_read(contig, regionid, pos, umi_info.centroid, umi_info.count)
+                    if not pos == prevpos + 1 and prevpos+1 not in skippos:
+                        for i in range(prevpos+1,pos):
+                            if i not in skippos:
+                                consread.add_base('N', get_ascii(0))
+                        consread.split_read(prevpos+1,pos)
+                    if 'I' in consensus[pos]:
+                        # first add the insertion if it is in the majority of the reads, then add the base at the next position
+                        cons_dict = consensus[pos]['I']
+                        cons_allele = max(cons_dict, key=cons_dict.get)
+                        cons_num = cons_dict[cons_allele]
+                        percent = (cons_num / len(group_seqs))*100.0
                         if percent >= indel_freq_threshold:
-                            dellength = int(a.lstrip('D'))
-                            consread.add_deletion(dellength)
-                            if dellength > 1:
-                                for i in range(1,dellength):
-                                    skippos.append(pos + i)
+                            sequence = cons_allele
+                            consread.add_insertion(sequence)
+                        del(consensus[pos]['I'])
+                        cons_base, cons_qual = calc_consensus_probabilities(consensus[pos])
+                        consread.add_base(cons_base, get_ascii(cons_qual))
+
+                    elif 'D' in consensus[pos]:
+                        # add the deletions
+                        a, percent = get_most_common_allele(consensus[pos])
+                        if a.startswith('D'):
+                            if percent >= indel_freq_threshold:
+                                dellength = int(a.lstrip('D'))
+                                consread.add_deletion(dellength)
+                                if dellength > 1:
+                                    for i in range(1,dellength):
+                                        skippos.append(pos + i)
+                            else:
+                                consread.add_base('N', get_ascii(0))
+                                add_consensus = False
+                        elif percent >= indel_freq_threshold:
+                            cons_base, cons_qual = calc_consensus_probabilities(consensus[pos])
+                            consread.add_base(cons_base, get_ascii(cons_qual))
                         else:
                             consread.add_base('N', get_ascii(0))
                             add_consensus = False
-                    elif percent >= indel_freq_threshold:
+                    else:
+                        #no indel
                         cons_base, cons_qual = calc_consensus_probabilities(consensus[pos])
-                        consread.add_base(cons_base, get_ascii(cons_qual))
-                    else:
-                        consread.add_base('N', get_ascii(0))
-                        add_consensus = False
-                else:
-                    #no indel
-                    cons_base, cons_qual = calc_consensus_probabilities(consensus[pos])
-                    if consensus_freq_threshold: #test if not None
-                        if len(consensus[pos]) == 1:  #100%
-                            consread.add_base(cons_base, get_ascii(cons_qual))
-                        else:
-                            if cons_base not in consensus[pos]:
-                                print(cons_base+" not in consensus[pos] "+str(pos), consensus[pos])
+                        if consensus_freq_threshold: #test if not None
+                            if len(consensus[pos]) == 1:  #100%
+                                consread.add_base(cons_base, get_ascii(cons_qual))
                             else:
-                                percent = (len(consensus[pos][cons_base]) / len(group_seqs))*100.0
-                                if percent >= consensus_freq_threshold: #consensus frequency above threshold
-                                    consread.add_base(cons_base, get_ascii(cons_qual))
+                                if cons_base not in consensus[pos]:
+                                    print(cons_base+" not in consensus[pos] "+str(pos), consensus[pos])
                                 else:
-                                    consread.add_base('N', get_ascii(0))
-                                    add_consensus = False
-                    else:
-                        consread.add_base(cons_base, get_ascii(cons_qual))
-                #if umi_info.centroid == 'TCCTCACG':
-                #        print(consread.start_pos,consread.splits)
-                #        print(consread.seq)
-                #        print(consread.qual)
-                #        print(consread.cigarstring)
+                                    percent = (len(consensus[pos][cons_base]) / len(group_seqs))*100.0
+                                    if percent >= consensus_freq_threshold: #consensus frequency above threshold
+                                        consread.add_base(cons_base, get_ascii(cons_qual))
+                                    else:
+                                        consread.add_base('N', get_ascii(0))
+                                        add_consensus = False
+                        else:
+                            consread.add_base(cons_base, get_ascii(cons_qual))
+                    #if umi_info.centroid == 'TCCTCACG':
+                    #        print(consread.start_pos,consread.splits)
+                    #        print(consread.seq)
+                    #        print(consread.qual)
+                    #        print(consread.cigarstring)
             prevpos=pos
 
         if add_consensus:
