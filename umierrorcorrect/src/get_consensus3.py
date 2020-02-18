@@ -158,10 +158,12 @@ def calc_consensus(base, cons_pos):
     for nucl in cons_pos:
         if nucl in base:
             for phred in cons_pos[nucl]:
-                prod = prod*(1 - (10**(-phred/10)))
+                if not phred == 0:
+                    prod = prod*(1 - (10**(-phred/10)))
         if nucl not in base and nucl in 'ATCG':
             for phred in cons_pos[nucl]:
-                prod = prod*(10**(-phred/10))
+                if not phred == 0:
+                    prod = prod*(10**(-phred/10))
     return(prod)
 
 
