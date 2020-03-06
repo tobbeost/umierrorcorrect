@@ -352,9 +352,9 @@ def run_umi_errorcorrect(args):
     consfilelist = [x.rstrip('.bam') + '.cons' for x in bamfilelist]
     merge_cons(args.output_path, consfilelist, args.sample_name)
     cons_file = args.output_path + '/' + args.sample_name + '.cons'
-    duppos = check_duplicate_positions(cons_file)
-    if any(duppos):
-        merge_duplicate_positions(duppos,cons_file)
+    #duppos = check_duplicate_positions(cons_file)
+    #if any(duppos):
+    #    merge_duplicate_positions(duppos,cons_file)
 
     statfilelist = [x.rstrip('.bam') + '.hist' for x in bamfilelist]
     merge_stat(args.output_path, statfilelist, args.sample_name)

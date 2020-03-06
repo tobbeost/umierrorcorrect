@@ -58,8 +58,11 @@ class consensus_read:
             self.splits.append(position2)
         else:
             tmppos=self.splits[-1]
-            self.splits[-1]=(tmppos,position1)
-            self.splits.append(position2)
+            if tmppos ==position1:
+                self.splits[-1]=position2
+            else:
+                self.splits[-1]=(tmppos,position1)
+                self.splits.append(position2)
             
 
 
