@@ -146,6 +146,7 @@ def run_call_variants(args):
     print(params[1])
     a[a==inf]=1e-10
     a[np.isnan(a)]=1e-10
+    a[a==0]=1e-10
     Q = -10*np.log10(a)
     data=np.array(data)
     plot_histogram(Q,args.output_path+'/'+args.sample_name+'.histogram.png')
