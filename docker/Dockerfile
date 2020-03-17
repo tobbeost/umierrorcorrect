@@ -31,9 +31,9 @@ RUN apt-get update \
     python3-pip \
     python3-setuptools \
     pigz \
-    #samtools \
     bwa && \
     pip3 install wheel && \
+    pip3 install Cython && \
     pip3 install pysam && \
     pip3 install scipy && \
     pip3 install matplotlib && \
