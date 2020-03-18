@@ -203,7 +203,7 @@ def write_consensus(f, cons, ref_seq, start, contig, annotation, samplename, onl
                 line.append(annotation_pos)
                 line.append(refbase)
                 consline = cons[pos][fsize]
-                tot = sum(consline.values())
+                tot = sum(consline[key] for key in consline if key != 'I')
                 nonrefcons = {key: consline[key] for key in consline if key != refbase}
                 if len(nonrefcons) > 0:
                     mna, freq, count = calc_major_nonref_allele_frequency(nonrefcons, refbase, tot)
