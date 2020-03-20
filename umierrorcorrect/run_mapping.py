@@ -22,6 +22,9 @@ def parseArgs():
     parser.add_argument('-s', '--sample_name', dest='sample_name', 
                         help='Sample name that will be used as base name for the output files. \
                               If excluded the sample name will be extracted from the fastq files.')
+    parser.add_argument('-remove', '--remove_large_files',  dest='remove_large_files', action='store_true',\
+                            help='Include this flag to emove the original Fastq and BAM files (reads without error correction).')
+    
     parser.add_argument('-t', '--num_threads', dest='num_threads', 
                         help='Number of threads to run the program on. Default=%(default)s', default='1')
     args = parser.parse_args(sys.argv[1:])
@@ -52,7 +55,7 @@ def get_sample_name(read1, mode):
     return(samplename)
 
 
-def run_mapping(num_threads, reference_file, fastq_files, output_path, sample_name):
+def run_mapping(num_threads, reference_file, fastq_files, output_path, sample_name, remove_large_files):
     '''Run mapping with bwa to create a SAM file, then convert it to BAM, sort and index the file'''
     logging.info("Starting mapping with BWA")
     output_file = output_path + '/' + sample_name
@@ -72,6 +75,10 @@ def run_mapping(num_threads, reference_file, fastq_files, output_path, sample_na
     pysam.index(output_file + '.sorted.bam', catch_stdout=False)
     os.remove(output_file + '.sam')
     os.remove(output_file + '.bam')
+    if remove_large_files:
+        os.remove(fastq_files[0])
+        if len(fastq_files)==2:
+            os.remove(fastq_files[1])
     logging.info("Finished mapping")
     return(output_file + '.sorted.bam')
 
@@ -89,4 +96,4 @@ if __name__ == '__main__':
     if not args.sample_name:
         args.sample_name = get_sample_name(args.read1, mode)
 
-    bamfile=run_mapping(args.num_threads, args.reference_file, fastq_files, args.output_path, args.sample_name)
+    bamfile=run_mapping(args.num_threads, args.reference_file, fastq_files, args.output_path, args.sample_name, args.remove_large_files)

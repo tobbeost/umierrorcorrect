@@ -40,7 +40,8 @@ def parseArgs():
     group1.add_argument('-s', '--sample_name', dest='sample_name', 
                         help='Sample name that will be used as base name for the output files. \
                               If excluded the sample name will be extracted from the fastq files.')
-
+    group1.add_argument('-remove', '--remove_large_files',  dest='remove_large_files', action='store_true',\
+                        help='Include this flag to emove the original Fastq and BAM files (reads without error correction).')
     group2 = parser.add_argument_group('UMI definition options')
     group2.add_argument('-ul', '--umi_length', dest='umi_length', 
                         help='Length of UMI sequence (number of nucleotides). The UMI is assumed to \
@@ -120,7 +121,7 @@ def main(args):
     fastq_files, nseqs = run_preprocessing(args)  # run preprocessing
     print(fastq_files, nseqs)
     bam_file = run_mapping(args.num_threads, args.reference_file, fastq_files, 
-                           args.output_path, args.sample_name)  # run mapping
+                           args.output_path, args.sample_name, args.remove_large_files)  # run mapping
     args.bam_file = bam_file
     print(args.bam_file)
     run_umi_errorcorrect(args)  #run umi errorcorrect

@@ -37,6 +37,8 @@ def parseArgs():
     parser.add_argument('-s', '--sample_name', dest='sample_name', 
                         help='Sample name that will be used as base name for the output files. \
                         If excluded the sample name will be extracted from the BAM file.')
+    parser.add_argument('-remove', '--remove_large_files',  dest='remove_large_files', action='store_true',\
+                        help='Include this flag to emove the original Fastq and BAM files (reads without error correction).')
     parser.add_argument('-d', '--edit_distance', dest='edit_distance_threshold', 
                         help="Edit distance threshold for UMI clustering, [default = %(default)s]", default=1)
     parser.add_argument('-p', '--position_threshold', dest='position_threshold', 
@@ -235,6 +237,7 @@ def merge_duplicate_positions(duppos,cons_file):
                             newlist = [str(x) for x in tmp]
                             consdict = { 'A': tmp[0], 'C': tmp[1], 'G':tmp[2], 'T': tmp[3], 'I': tmp[4], 'D': tmp[5], 'N': tmp[6]}
                             tot = sum(consdict.values())
+                            tot = sum(consdict[key] for key in consdict if key != 'I')
                             refbase = parts[4]
                             nonrefcons = {key: consdict[key] for key in consdict if key != refbase}
                             mna, freq, count = calc_major_nonref_allele_frequency(nonrefcons, parts[4], tot)
@@ -352,6 +355,8 @@ def run_umi_errorcorrect(args):
     consfilelist = [x.rstrip('.bam') + '.cons' for x in bamfilelist]
     merge_cons(args.output_path, consfilelist, args.sample_name)
     cons_file = args.output_path + '/' + args.sample_name + '.cons'
+    if args.remove_large_files:
+        os.remove(args.output_path+'/' +args.bam_file)
     #duppos = check_duplicate_positions(cons_file)
     #if any(duppos):
     #    merge_duplicate_positions(duppos,cons_file)
