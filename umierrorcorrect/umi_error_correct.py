@@ -179,9 +179,9 @@ def check_duplicate_positions(cons_file):
             parts=line.split('\t')
             if parts[13]=='0':
                 g.write(' '.join(parts[1:3])+'\n')
-    command=['uniq', '-d', 'tmp.txt']
+    command1=['sort tmp.txt | uniq -d']
     with open('tmp2.txt','w') as g:
-        p1=subprocess.Popen(command, stdout=g)
+        p1=subprocess.Popen(command1, shell=True, stdout=g)
         p1.communicate()
     os.remove('tmp.txt')
     duppos=[]
