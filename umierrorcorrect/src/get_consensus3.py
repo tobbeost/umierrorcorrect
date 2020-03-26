@@ -80,10 +80,9 @@ class consensus_read:
             a.tags = (("NM", self.nmtag), ("RG", "L1"))
             f.write(a)
         else:
+            j=0
             for i,s in enumerate(self.splits):
                 a = pysam.AlignedSegment()
-                parts=self.name.split('_Count=')
-                a.query_name = parts[0]+'_'+chr(i+97)+'_Count='+parts[1]
                 if type(s) is tuple:
                     start = s[0] - self.start_pos          
                     end = s[1] - self.start_pos
@@ -94,6 +93,9 @@ class consensus_read:
                     a.reference_start = s
                 a.query_sequence = self.seq[start:end]
                 if a.query_sequence:
+                    parts=self.name.split('_Count=')
+                    a.query_name = parts[0]+'_'+chr(j+97)+'_Count='+parts[1]
+                    j+=1
                     a.flag = 0
                     a.reference_id = f.references.index(self.contig)
                     a.mapping_quality = 60

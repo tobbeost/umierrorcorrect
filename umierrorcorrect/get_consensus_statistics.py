@@ -75,18 +75,20 @@ def get_stat(consensus_filename, stat_filename):
             regionid=int(regionid)
             regions.append((regionid,pos,singles,name))
             
-    print(regions)
+    #print(regions)
     hist={}
     with pysam.AlignmentFile(consensus_filename,'rb') as f:
         reads=f.fetch()
         for read in reads:
             idx=read.qname
             if idx.startswith('Consensus_read'):
-                regionid=int(idx.split('_')[2])
-                count=int(idx.split('=')[-1])
-                if regionid not in hist:
-                    hist[regionid]=[]
-                hist[regionid].append(count)
+                parts=idx.split('_')
+                regionid=int(parts[2])
+                if parts[4].startswith('Count') or parts[4]=='a':
+                    count=int(idx.split('=')[-1])
+                    if regionid not in hist:
+                        hist[regionid]=[]
+                    hist[regionid].append(count)
     #print(hist)
     fsizes=[1,2,3,4,5,7,10,20,30]
     regionstats=[]
@@ -133,7 +135,7 @@ def get_overall_statistics(hist,fsizes):
     fsizesnew=fsizes.copy()
     histall.fsizes = fsizes
     fsizesnew.insert(0,0)
-    print(fsizesnew)
+    #print(fsizesnew)
     for fsize in fsizesnew:
         histall.total_reads[fsize]=0
         histall.umis[fsize]=0
