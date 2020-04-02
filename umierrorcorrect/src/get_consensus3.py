@@ -191,8 +191,15 @@ def calc_consensus_probabilities(cons_pos):
             cons_phred = 60
     return(cons_base, cons_phred)
 
+
 def get_position_coverage(covpos):
-    return(sum([len(x) for x in covpos.values()]))
+    coverage = 0
+    coverage = sum([len(covpos[x]) for x in covpos if x not in 'D'])
+    if 'D' in covpos:
+        for numseqs in covpos['D'].values():
+            coverage += numseqs
+    return(coverage)
+
 
 def getConsensus3(group_seqs, contig, regionid, indel_freq_threshold, umi_info, consensus_freq_threshold):
     '''Takes a list of pysam entries (rows in the BAM file) as input and generates a consensus sequence.'''
