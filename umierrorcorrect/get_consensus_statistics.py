@@ -4,8 +4,8 @@ import sys
 import argparse
 #import matplotlib.pyplot as plt
 import logging
-from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, merge_regions, get_annotation
-from umierrorcorrect.version import __version__
+from src.get_regions_from_bed import read_bed, sort_regions, merge_regions, get_annotation
+from version import __version__
 
 def parseArgs():
     '''Function for parsing arguments'''

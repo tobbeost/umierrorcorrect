@@ -5,8 +5,8 @@ import pickle
 import pysam
 # from umi_cluster import umi_cluster
 from collections import Counter
-from umierrorcorrect.src.get_consensus import get_cons_dict, get_all_consensus, get_reference_sequence
-from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, merge_regions, get_annotation, get_annotation2
+from src.get_consensus import get_cons_dict, get_all_consensus, get_reference_sequence
+from src.get_regions_from_bed import read_bed, sort_regions, merge_regions, get_annotation, get_annotation2
 
 
 def get_cons_info(consensus_seq, singletons, fsizes=[0, 1, 2, 3, 4, 5, 7, 10, 20, 30]):

@@ -5,7 +5,7 @@ import sys
 import os
 import pysam
 import logging
-from umierrorcorrect.version import __version__
+from version import __version__
 
 def parseArgs():
     parser = argparse.ArgumentParser(description="UmiErrorCorrect v. {}. \

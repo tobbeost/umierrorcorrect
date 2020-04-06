@@ -8,8 +8,8 @@ import pysam
 # from collections import Counter
 from math import log10
 from itertools import groupby
-from umierrorcorrect.src.group import readBam, read_bam_from_bed
-from umierrorcorrect.src.umi_cluster import cluster_barcodes, get_connected_components, merge_clusters
+from src.group import readBam, read_bam_from_bed
+from src.umi_cluster import cluster_barcodes, get_connected_components, merge_clusters
 
 class consensus_read:
 
