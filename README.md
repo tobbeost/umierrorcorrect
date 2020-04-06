@@ -10,7 +10,10 @@ To run Umierrorcorrect via Docker, see the [Docker documentation](doc/docker.md)
 To install the UMI-errorcorrect pipeline from source, open a terminal and type the following:
 
 ```bash
+<<<<<<< HEAD
 pip install https://github.com/tobbeost/umierrorcorrect/archive/v0.16.tar.gz 
+=======
+>>>>>>> f2a45544d919484d6d05d94dd42f418dc92c2242
 ```
     
 After installation, try to run the pipeline:
