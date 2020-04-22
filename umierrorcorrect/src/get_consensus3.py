@@ -99,7 +99,8 @@ class consensus_read:
                     a.flag = 0
                     a.reference_id = f.references.index(self.contig)
                     a.mapping_quality = 60
-                    groups = groupby(self.cigarstring[start:end])
+                    endc=end+self.cigarstring[start:end].count('2') #add 1 for each deletion
+                    groups = groupby(self.cigarstring[start:endc])
                     cigar = tuple((int(label),
                                    sum(1 for _ in group)) for label, group in groups)
                     a.cigar = cigar
@@ -133,7 +134,7 @@ def get_reference_sequence(fasta, chrx, start, stop):
 
 def get_most_common_allele(cons_pos):
     '''Calculate the allele frequencies at one position and returns the 
-       allele with the highest frequency.'''
+       allele ith the highest frequency.'''
     cons_dict = {}
     for x, y in cons_pos.items():
         if x in 'ID':
@@ -194,9 +195,12 @@ def calc_consensus_probabilities(cons_pos):
 
 def get_position_coverage(covpos):
     coverage = 0
-    coverage = sum([len(covpos[x]) for x in covpos if x not in 'D'])
+    coverage = sum([len(covpos[x]) for x in covpos if x not in  ['D', 'I']])
     if 'D' in covpos:
         for numseqs in covpos['D'].values():
+            coverage += numseqs
+    if 'I' in covpos:
+        for numseqs in covpos['I'].values():
             coverage += numseqs
     return(coverage)
 
