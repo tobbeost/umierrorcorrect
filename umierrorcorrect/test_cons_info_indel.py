@@ -65,7 +65,7 @@ def main(bam_file):
     print(consread.seq)
     print(consread.qual)
     print(consread.cigarstring)
-    print(cons_info)
+    print(cons_info[54727427][3])
     
 
 if __name__=='__main__':
