@@ -32,83 +32,100 @@ def get_cons_info(consensus_seq, singletons, fsizes=[0, 1, 2, 3, 4, 5, 7, 10, 20
                     pos += 1
             else:
                 i = 0
+                skipbase=[]
                 cigar = consensus_read.cigarstring
                 for base in consensus_read.seq:
                     c = cigar[i]
-                    if pos not in cons:
-                        cons[pos] = {}
-                    if c == '0':  # match or mismatch
-                        for fsize in fsizes:
-                            if fsize == 0:
-                                if fsize not in cons[pos]:
-                                    cons[pos][fsize] = Counter()
-                                cons[pos][fsize][base] += count
-                            elif count >= fsize:
-                                if fsize not in cons[pos]:
-                                    cons[pos][fsize] = Counter()
-                                cons[pos][fsize][base] += 1
-                        pos += 1
-                        i += 1
-                    elif c == '1':  # insertion
-                        for fsize in fsizes:
-                            if fsize == 0:
-                                if fsize not in cons[pos]:
-                                    cons[pos][fsize] = Counter()
-                                cons[pos][fsize]['I'] += count
-                            elif count >= fsize:
-                                if fsize not in cons[pos]:
-                                    cons[pos][fsize] = Counter()
-                                cons[pos][fsize]['I'] += 1
-                        i += 1
-                    elif c == '2':  # deletion
-                        for fsize in fsizes:
-                            if fsize == 0:
-                                if fsize not in cons[pos]:
-                                    cons[pos][fsize] = Counter()
-                                cons[pos][fsize]['D'] += count
-
-                            elif count >= fsize:
-                                if fsize not in cons[pos]:
-                                    cons[pos][fsize] = Counter()
-                                cons[pos][fsize]['D'] += 1
-                        deletion = False
-                        if cigar[i+1] == '2':
-                            deletion = True
-                            while deletion:
-                                i += 1
-                                c = cigar[i]
-                                pos += 1
-                                if pos not in cons:
-                                    cons[pos] = {}
-                                for fsize in fsizes:
-                                    if fsize == 0:
-                                        if fsize not in cons[pos]:
-                                            cons[pos][fsize] = Counter()
-                                        cons[pos][fsize]['D'] += count
-
-                                    elif count >= fsize:
-                                        if fsize not in cons[pos]:
-                                            cons[pos][fsize] = Counter()
-                                        cons[pos][fsize]['D'] += 1
-                                if cigar[i+1] == '2':
-                                    deletion = True
-                                else:
-                                    deletion = False
-                        pos += 1
+                    if i not in skipbase:
                         if pos not in cons:
                             cons[pos] = {}
-                        for fsize in fsizes:
-                            if fsize == 0:
-                                if fsize not in cons[pos]:
-                                    cons[pos][fsize] = Counter()
-                                cons[pos][fsize][base] += count
+                        if c == '0':  # match or mismatch
+                            for fsize in fsizes:
+                                if fsize == 0:
+                                    if fsize not in cons[pos]:
+                                        cons[pos][fsize] = Counter()
+                                    cons[pos][fsize][base] += count
+                                elif count >= fsize:
+                                    if fsize not in cons[pos]:
+                                        cons[pos][fsize] = Counter()
+                                    cons[pos][fsize][base] += 1
+                            pos += 1
+                            i += 1
+                        elif c == '1':  # insertion
+                            if cigar[i+1] == '1': #if next base also have an insertion
+                                j=0
+                                insertion=True
+                                while insertion:
+                                    j+=1
+                                    if cigar[i+j]=='1':
+                                        skipbase.append(i+j)
+                                    else:
+                                        insertion=False
+                                insstring=consensus_read.seq[i-1:i+j-1]
+                            else:
+                                insstring=consensus_read.seq[i-1]
+                            for fsize in fsizes:
+                                if fsize == 0:
+                                    if fsize not in cons[pos]:
+                                        cons[pos][fsize] = Counter()
+                                    cons[pos][fsize]['I'] += count
+                                elif count >= fsize:
+                                    if fsize not in cons[pos]:
+                                        cons[pos][fsize] = Counter()
+                                    cons[pos][fsize]['I'] += 1
+                            i += 1
+                        elif c == '2':  # deletion
+                            for fsize in fsizes:
+                                if fsize == 0:
+                                    if fsize not in cons[pos]:
+                                        cons[pos][fsize] = Counter()
+                                    cons[pos][fsize]['D'] += count
 
-                            elif count >= fsize:
-                                if fsize not in cons[pos]:
-                                    cons[pos][fsize] = Counter()
-                                cons[pos][fsize][base] += 1
-                        pos += 1
+                                elif count >= fsize:
+                                    if fsize not in cons[pos]:
+                                        cons[pos][fsize] = Counter()
+                                    cons[pos][fsize]['D'] += 1
+                            deletion = False
+                            if cigar[i+1] == '2':
+                                deletion = True
+                                while deletion:
+                                    i += 1
+                                    c = cigar[i]
+                                    pos += 1
+                                    if pos not in cons:
+                                        cons[pos] = {}
+                                    for fsize in fsizes:
+                                        if fsize == 0:
+                                            if fsize not in cons[pos]:
+                                                cons[pos][fsize] = Counter()
+                                            cons[pos][fsize]['D'] += count
+
+                                        elif count >= fsize:
+                                            if fsize not in cons[pos]:
+                                                cons[pos][fsize] = Counter()
+                                            cons[pos][fsize]['D'] += 1
+                                    if cigar[i+1] == '2':
+                                        deletion = True
+                                    else:
+                                        deletion = False
+                            pos += 1
+                            if pos not in cons:
+                                cons[pos] = {}
+                            for fsize in fsizes:
+                                if fsize == 0:
+                                    if fsize not in cons[pos]:
+                                        cons[pos][fsize] = Counter()
+                                    cons[pos][fsize][base] += count
+
+                                elif count >= fsize:
+                                    if fsize not in cons[pos]:
+                                        cons[pos][fsize] = Counter()
+                                    cons[pos][fsize][base] += 1
+                            pos += 1
+                            i += 1
+                    else:
                         i += 1
+                                  
     for read in singletons.values():
 
         if 'I' not in read.cigarstring and 'D' not in read.cigarstring:
