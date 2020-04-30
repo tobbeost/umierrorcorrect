@@ -92,18 +92,18 @@ def get_cons_info(consensus_seq, singletons, fsizes=[0, 1, 2, 3, 4, 5, 7, 10, 20
                                     i += 1
                                     c = cigar[i]
                                     pos += 1
-                                    if pos not in cons:
-                                        cons[pos] = {}
-                                    for fsize in fsizes:
-                                        if fsize == 0:
-                                            if fsize not in cons[pos]:
-                                                cons[pos][fsize] = Counter()
-                                            cons[pos][fsize]['D'] += count
+                                    #if pos not in cons:
+                                    #    cons[pos] = {}
+                                    #for fsize in fsizes:
+                                    #    if fsize == 0:
+                                    #        if fsize not in cons[pos]:
+                                    #            cons[pos][fsize] = Counter()
+                                    #        cons[pos][fsize]['D'] += count
 
-                                        elif count >= fsize:
-                                            if fsize not in cons[pos]:
-                                                cons[pos][fsize] = Counter()
-                                            cons[pos][fsize]['D'] += 1
+                                    #    elif count >= fsize:
+                                    #        if fsize not in cons[pos]:
+                                    #            cons[pos][fsize] = Counter()
+                                    #        cons[pos][fsize]['D'] += 1
                                     if cigar[i+1] == '2':
                                         deletion = True
                                     else:
