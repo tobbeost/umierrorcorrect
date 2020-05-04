@@ -11,7 +11,7 @@ LABEL about.home="https://github.com/tobbeost/umierrorcorrect"
 LABEL about.tags="Genomics"
 
 # Add umierrorcorrect download from github to container in /etc
-ADD https://github.com/tobbeost/umierrorcorrect/archive/v0.16.tar.gz /etc/
+ADD https://github.com/tobbeost/umierrorcorrect/archive/v0.17.tar.gz /etc/
 
 # Update Ubuntu Software repository and install dependencies
 RUN apt-get update \
@@ -37,7 +37,7 @@ RUN apt-get update \
     pip3 install pysam && \
     pip3 install scipy && \
     pip3 install matplotlib && \
-    pip3 install /etc/v0.16.tar.gz
+    pip3 install /etc/v0.17.tar.gz
 
 
 ################## create folders ##################

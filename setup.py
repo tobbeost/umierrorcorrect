@@ -4,7 +4,7 @@ from setuptools import find_packages
 
 pack = find_packages() 
 
-install_requires = ["pysam>=0.8.4","scipy"]
+install_requires = ["pysam>=0.8.4","scipy","matplotlib"]
 
 exec(open('umierrorcorrect/version.py').read())
 
