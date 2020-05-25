@@ -63,9 +63,9 @@ def get_cons_info(consensus_seq, singletons, fsizes=[0, 1, 2, 3, 4, 5, 7, 10, 20
                                         skipbase.append(i+j)
                                     else:
                                         insertion=False
-                                insstring=consensus_read.seq[i-1:i+j-1]
-                            else:
-                                insstring=consensus_read.seq[i-1]
+                                #insstring=consensus_read.seq[i-1:i+j-1]
+                            #else:
+                            #    insstring=consensus_read.seq[i-1]
                             for fsize in fsizes:
                                 if fsize == 0:
                                     if fsize not in cons[pos]:
