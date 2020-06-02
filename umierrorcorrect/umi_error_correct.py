@@ -184,18 +184,24 @@ def check_duplicate_positions(cons_file):
         p1=subprocess.Popen(command1, shell=True, stdout=g)
         p1.communicate()
     os.remove('tmp.txt')
-    duppos=[]
+    duppos={}
     with open('tmp2.txt') as f:
         for line in f:
             line=line.rstrip()
-            duppos.append(line)
+            parts=line.split()
+            chrx=parts[0]
+            pos=parts[1]
+            if chrx not in duppos:
+                duppos[chrx]=[]
+            duppos[chrx].append(pos)            
     os.remove('tmp2.txt')
     return(duppos)
 
 def sum_lists(*args):
     return(list(map(sum, zip(*args))))
 
-def merge_duplicate_positions(duppos,cons_file):
+def merge_duplicate_positions(args):
+    chrx, duppos, cons_file = args
     dupcons={}
     a = 13
     b = 2
@@ -203,8 +209,9 @@ def merge_duplicate_positions(duppos,cons_file):
         line = f.readline()
         for line in f:
             parts = line.split('\t')
-            pos = '{} {}'.format(parts[b-1], parts[b])
-            if pos in duppos:
+            pos = parts[b]
+            contig = parts[b-1]
+            if contig == chrx and pos in duppos:
                 fsize = parts[a]
                 if pos not in dupcons:
                     dupcons[pos] = {}
@@ -219,36 +226,66 @@ def merge_duplicate_positions(duppos,cons_file):
             for s in dupcons[pos][fsize]:
                 parts=s.split('\t')
                 newpos[pos][fsize]=[int(a)+int(b) for a,b in zip(newpos[pos][fsize],parts[5:15])]
-    with open(cons_file) as f,open(cons_file+'_new', 'w') as g:
+    with open(cons_file) as f,open(cons_file+'_new'+chrx, 'w') as g:
         line = f.readline()
         g.write(line)
         positions=[]
         fsizes=['0', '1', '2', '3', '4', '5', '7', '10', '20', '30']
         for line in f:
             parts=line.split('\t')
-            pos = '{} {}'.format(parts[b-1],parts[b])
-            if pos not in newpos:
-                g.write(line)
-            else:
-                if pos not in positions:
-                    for fsize in fsizes:
-                        if fsize in newpos[pos]:
-                            tmp = newpos[pos][fsize]
-                            newlist = [str(x) for x in tmp]
-                            consdict = { 'A': tmp[0], 'C': tmp[1], 'G':tmp[2], 'T': tmp[3], 'I': tmp[4], 'D': tmp[5], 'N': tmp[6]}
-                            tot = sum(consdict.values())
-                            tot = sum(consdict[key] for key in consdict if key != 'I')
-                            refbase = parts[4]
-                            nonrefcons = {key: consdict[key] for key in consdict if key != refbase}
-                            mna, freq, count = calc_major_nonref_allele_frequency(nonrefcons, parts[4], tot)
+            pos = parts[b]
+            contig = parts[b-1]
+            if contig == chrx:
+                if pos not in newpos:
+                    g.write(line)
+                else:
+                    if pos not in positions:
+                        for fsize in fsizes:
+                            if fsize in newpos[pos]:
+                                tmp = newpos[pos][fsize]
+                                newlist = [str(x) for x in tmp]
+                                consdict = { 'A': tmp[0], 'C': tmp[1], 'G':tmp[2], 'T': tmp[3], 'I': tmp[4], 'D': tmp[5], 'N': tmp[6]}
+                                #tot = sum(consdict.values())
+                                tot = sum(consdict[key] for key in consdict if key != 'I')
+                                if tot>0:
+                                    refbase = parts[4]
+                                    nonrefcons = {key: consdict[key] for key in consdict if key != refbase}
+                                    mna, freq, count = calc_major_nonref_allele_frequency(nonrefcons, parts[4], tot)
                         #frac=(newpos[pos][fsize][9]/newpos[pos][fsize][7])*1.0
-                            g.write('\t'.join(parts[0:5])+'\t'+'\t'.join(newlist[0:8])+'\t'+fsize+'\t'+str(count)+'\t'+str(freq)+'\t'+mna+'\n')
-                    positions.append(pos)
+                                    g.write('\t'.join(parts[0:5])+'\t'+'\t'.join(newlist[0:8])+'\t'+fsize+'\t'+str(count)+'\t'+str(freq)+'\t'+mna+'\n')
+                        positions.append(pos)
 
-    os.remove(cons_file)
-    os.rename(cons_file+'_new',cons_file)
+    #os.remove(cons_file)
+    #os.rename(cons_file+'_new',cons_file)
 
-def merge_stat(output_path, statfilelist, sample_name):
+def merge_duplicate_positions_all_chromosomes(duppos, cons_file, num_cpus):
+    argvec=[]
+    for chrx in duppos:
+        tmpargs=(chrx, duppos[chrx], cons_file)
+        argvec.append(tmpargs)
+    p = Pool(int(num_cpus))
+    p.map(merge_duplicate_positions, argvec)
+    merge_tmp_cons_files(duppos.keys(), cons_file)
+    if os.path.isfile(cons_file+'2'):
+        os.remove(cons_file)
+        os.rename(cons_file+'2',cons_file)
+        
+
+def merge_tmp_cons_files(chrlist, cons_file):
+    try:
+        chrlist_sorted=sorted(chrlist, key=int)
+    except ValueError as e:
+        chrlist_sorted=sorted(chrlist)
+    tmpfilelist=[cons_file + '_new' + str(x) for x in chrlist_sorted]
+    with open(cons_file + '2', 'w') as g:
+        for filename in tmpfilelist:
+            with open(filename) as f:
+                for line in f:
+                    g.write(line)
+    for filename in tmpfilelist:
+        os.remove(filename)
+
+def merge_stat(output_path,statfilelist, sample_name):
     '''Merge all stat files in statfilelist and remove temporary files.'''
     with open(output_path + '/' + sample_name + '.hist', 'w') as g:
         for filename in statfilelist:
@@ -359,7 +396,7 @@ def run_umi_errorcorrect(args):
         os.remove(args.output_path+'/' +args.bam_file)
     duppos = check_duplicate_positions(cons_file)
     if any(duppos):
-        merge_duplicate_positions(duppos,cons_file)
+        merge_duplicate_positions_all_chromosomes(duppos,cons_file,args.num_threads)
 
     statfilelist = [x.rstrip('.bam') + '.hist' for x in bamfilelist]
     merge_stat(args.output_path, statfilelist, args.sample_name)
