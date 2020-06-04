@@ -278,10 +278,14 @@ def merge_tmp_cons_files(chrlist, cons_file):
         chrlist_sorted=sorted(chrlist)
     tmpfilelist=[cons_file + '_new' + str(x) for x in chrlist_sorted]
     with open(cons_file + '2', 'w') as g:
+        i = 0
         for filename in tmpfilelist:
             with open(filename) as f:
+                if i > 0:
+                    f.readline()
                 for line in f:
                     g.write(line)
+                i += 1
     for filename in tmpfilelist:
         os.remove(filename)
 
@@ -394,12 +398,11 @@ def run_umi_errorcorrect(args):
     cons_file = args.output_path + '/' + args.sample_name + '.cons'
     if args.remove_large_files:
         os.remove(args.output_path+'/' +args.bam_file)
-    duppos = check_duplicate_positions(cons_file)
-    if any(duppos):
-        merge_duplicate_positions_all_chromosomes(duppos,cons_file,args.num_threads)
 
     statfilelist = [x.rstrip('.bam') + '.hist' for x in bamfilelist]
     merge_stat(args.output_path, statfilelist, args.sample_name)
+    if any(duppos):
+        merge_duplicate_positions_all_chromosomes(duppos,cons_file,args.num_threads)
     logging.info("Consensus generation complete, output written to {}, {}".format(args.output_path + 
                  '/' + args.sample_name + '_consensus_reads.bam',
                  args.output_path + '/' + args.sample_name + '.cons'))
