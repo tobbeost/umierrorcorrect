@@ -401,6 +401,7 @@ def run_umi_errorcorrect(args):
 
     statfilelist = [x.rstrip('.bam') + '.hist' for x in bamfilelist]
     merge_stat(args.output_path, statfilelist, args.sample_name)
+    duppos = check_duplicate_positions(cons_file)
     if any(duppos):
         merge_duplicate_positions_all_chromosomes(duppos,cons_file,args.num_threads)
     logging.info("Consensus generation complete, output written to {}, {}".format(args.output_path + 
