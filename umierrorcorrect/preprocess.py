@@ -163,11 +163,18 @@ def run_preprocessing(args):
         newtmpdir = generate_random_dir(args.output_path)
     # args.chunksize=int(args.chunksize)
     # Unzip the fastq.gz files
-    if args.mode == 'paired':
-        r1file = run_unpigz(args.read1, newtmpdir, args.num_threads, args.gziptool)
-        r2file = run_unpigz(args.read2, newtmpdir, args.num_threads, args.gziptool)
+    if not args.read1.endswith('gz'):
+        r1file = args.read1
+        removerfiles = False
+        if args.mode == 'paired':
+            r2file = args.read2
     else:
-        r1file = run_unpigz(args.read1, newtmpdir, args.num_threads, args.gziptool)
+        removerfiles = True
+        if args.mode == 'paired':
+            r1file = run_unpigz(args.read1, newtmpdir, args.num_threads, args.gziptool)
+            r2file = run_unpigz(args.read2, newtmpdir, args.num_threads, args.gziptool)
+        else:
+            r1file = run_unpigz(args.read1, newtmpdir, args.num_threads, args.gziptool)
 
     logging.info('Writing output files to {}'.format(args.output_path))
     if args.mode == 'single':
@@ -193,9 +200,9 @@ def run_preprocessing(args):
         nseqs = preprocess_pe(r1file, r2file, outfile1, outfile2, args.umi_length, args.spacer_length, args.dual_index)
         run_pigz(outfile1, args.num_threads,args.gziptool)
         run_pigz(outfile2, args.num_threads,args.gziptool)
-        if os.path.isfile(r1file):
+        if removerfiles == True and os.path.isfile(r1file):
             os.remove(r1file)
-        if os.path.isfile(r2file):
+        if removerfiles == True and os.path.isfile(r2file):
             os.remove(r2file)
         os.rmdir(newtmpdir)
         fastqfiles=[outfile1 + '.gz', outfile2 + '.gz']
