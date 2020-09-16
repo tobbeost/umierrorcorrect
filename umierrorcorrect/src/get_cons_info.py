@@ -24,11 +24,13 @@ def get_cons_info(consensus_seq, singletons, fsizes=[0, 1, 2, 3, 4, 5, 7, 10, 20
                         if fsize == 0:
                             if fsize not in cons[pos]:
                                 cons[pos][fsize] = Counter()
-                            cons[pos][fsize][base] += count
+                            if base not in 'N':
+                                cons[pos][fsize][base] += count
                         elif count >= fsize:
                             if fsize not in cons[pos]:
                                 cons[pos][fsize] = Counter()
-                            cons[pos][fsize][base] += 1
+                            if base not in 'N':
+                                cons[pos][fsize][base] += 1
                     pos += 1
             else:
                 i = 0
@@ -158,7 +160,7 @@ def get_cons_info(consensus_seq, singletons, fsizes=[0, 1, 2, 3, 4, 5, 7, 10, 20
                         if fsize not in cons[refpos]:
                             cons[refpos][fsize] = Counter()
                         cons[refpos][fsize]['I'] += 1
-                        cons[refpos][fsize][base] += 1
+                        #cons[refpos][fsize][base] += 1
                 elif not refpos == ref + 1:
                         # deletion
                     dellength = refpos - (ref + 1)
