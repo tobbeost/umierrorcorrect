@@ -149,7 +149,7 @@ def run_call_variants(args):
     a[a==0]=1e-10
     Q = -10*np.log10(a)
     data=np.array(data)
-    plot_histogram(Q,args.output_path+'/'+args.sample_name+'.histogram.png')
+    #plot_histogram(Q,args.output_path+'/'+args.sample_name+'.histogram.png')
     if args.vc_method.lower()=='bbmodel':
         rout=data[Q >= float(args.qvalue_threshold)]
         Qsig=Q[Q >= float(args.qvalue_threshold)]

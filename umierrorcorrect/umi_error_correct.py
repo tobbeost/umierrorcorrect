@@ -173,10 +173,14 @@ def merge_cons(output_path, consfilelist, sample_name):
         os.remove(filename)
 
 def check_duplicate_positions(cons_file):
+    
+    chrlist = []
     with open(cons_file) as f, open('tmp.txt','w') as g:
         f.readline()
         for line in f:
             parts=line.split('\t')
+            if parts[1] not in chrlist:
+                chrlist.append(parts[1])
             if parts[13]=='0':
                 g.write(' '.join(parts[1:3])+'\n')
     command1=['sort tmp.txt | uniq -d']
@@ -185,14 +189,14 @@ def check_duplicate_positions(cons_file):
         p1.communicate()
     os.remove('tmp.txt')
     duppos={}
+    for chrx in chrlist:
+        duppos[chrx] = []
     with open('tmp2.txt') as f:
         for line in f:
             line=line.rstrip()
             parts=line.split()
             chrx=parts[0]
             pos=parts[1]
-            if chrx not in duppos:
-                duppos[chrx]=[]
             duppos[chrx].append(pos)            
     os.remove('tmp2.txt')
     return(duppos)
@@ -260,6 +264,7 @@ def merge_duplicate_positions(args):
 
 def merge_duplicate_positions_all_chromosomes(duppos, cons_file, num_cpus):
     argvec=[]
+    print(duppos)
     for chrx in duppos:
         tmpargs=(chrx, duppos[chrx], cons_file)
         argvec.append(tmpargs)
