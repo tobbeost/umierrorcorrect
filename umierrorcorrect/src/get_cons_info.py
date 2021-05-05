@@ -199,7 +199,12 @@ def calc_major_nonref_allele_frequency(cons, ref, tot):
     comp = cons
     allele = max(comp, key=comp.get)
     count=cons[allele]
-    frac = 1.0*(cons[allele]/tot)
+    
+    if tot > 0:
+        frac = 1.0*(cons[allele]/tot)
+    else: 
+        frac = 0
+
     if frac > 0:
         return((allele, frac, count))
     else:

@@ -88,6 +88,8 @@ def cluster_consensus_worker(args):
     bamfilename, include_singletons, annotations, fasta, indel_frequency_cutoff, \
     consensus_frequency_cutoff = args  # extract args
     
+    indel_frequency_cutoff = float(indel_frequency_cutoff)
+    consensus_frequency_cutoff = float(consensus_frequency_cutoff)
     #UMI clustering
     adj_matrix = cluster_barcodes(umi_dict, edit_distance_threshold)
     clusters = get_connected_components(umi_dict, adj_matrix)
