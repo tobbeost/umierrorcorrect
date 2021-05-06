@@ -124,6 +124,7 @@ def main(args):
                            args.output_path, args.sample_name, args.remove_large_files)  # run mapping
     args.bam_file = bam_file
     print(args.bam_file)
+    args.regions_from_tag = False
     run_umi_errorcorrect(args)  #run umi errorcorrect
     cons_bam = args.output_path + '/' + args.sample_name + '_consensus_reads.bam'
     stat_filename = args.output_path + '/' + args.sample_name + '.hist'

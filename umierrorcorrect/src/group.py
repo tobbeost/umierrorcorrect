@@ -150,12 +150,40 @@ def read_bam_from_bed(infile, bedfile, position_threshold):
     return(regions, chrends)
 
 
+def read_bam_from_tag(infile):
+    regions={}
+    starts={}
+    ends={}
+    with pysam.AlignmentFile(infile, 'rb') as f:
+        reads=f.fetch()
+        for r in reads:
+            contig = r.reference_name
+            if contig not in regions:
+                regions[contig]={}
+                starts[contig]={}
+                ends[contig]={}
+            try:
+                utag = r.get_tag('UG')
+            except KeyError:
+                print('UG tag not present in BAM file')
+            if utag not in regions[contig]:
+                regions[contig][utag] = Counter()
+                starts[contig][utag] = r.reference_start
+                ends[contig][utag] = r.reference_end
+            barcode = r.qname.split(':')[-1]
+            regions[contig][utag][barcode] += 1
+            if r.reference_end > ends[contig][utag]:
+                ends[contig][utag]=r.reference_end
+    return(regions,starts,ends)
+
 def main(filename, bedfile):
     position_threshold = 10
     group_method = 'automatic'
     # group_method='fromBed'
     if group_method == 'fromBed':
         regions = read_bam_from_bed(filename, bedfile, position_threshold)
+    elif group_method == 'fromTag':
+        regions = read_bam_from_tag(filename)
     else:
         regions, chrends = readBam(filename, position_threshold)
     for chrx in regions:

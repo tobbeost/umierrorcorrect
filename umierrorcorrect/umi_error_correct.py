@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from umierrorcorrect.src.group import readBam, read_bam_from_bed
+from umierrorcorrect.src.group import readBam, read_bam_from_bed, read_bam_from_tag
 from umierrorcorrect.src.umi_cluster import cluster_barcodes, get_connected_components, merge_clusters
 from umierrorcorrect.src.get_consensus3 import get_cons_dict, get_all_consensus, write_singleton_reads, get_reference_sequence
 from umierrorcorrect.src.get_cons_info import get_cons_info, write_consensus, calc_major_nonref_allele_frequency
@@ -31,6 +31,12 @@ def parseArgs():
                               and variant calling should be defined from the BED file. \
                               Default is to detect the regions automatically from the \
                               BAM file. ', 
+                        action='store_true')
+    parser.add_argument('-regions_from_tag', dest='regions_from_tag',
+                        help='Include this flag if regions used for UMI clustering \
+                              and variant calling should be defined from the UG tag in the BAM file. \
+                              Default is to detect the regions automatically from the \
+                              BAM file. ',
                         action='store_true')
     parser.add_argument('-r', '--reference', dest='reference_file', 
                         help='Path to the reference sequence in Fasta format, Used for annotation, required', required=True)
@@ -310,14 +316,14 @@ def merge_stat(output_path,statfilelist, sample_name):
 
 def index_bam_file(filename, num_threads=1):
     '''Index the consensus reads bam file'''
-    pysam.sort('-@',  num_threads, filename, '-o', filename + '.sorted', catch_stdout=False)
+    pysam.sort('-@', str(num_threads), filename, '-o', filename + '.sorted', catch_stdout=False)
     os.rename(filename + '.sorted', filename)
     pysam.index(filename, catch_stdout=False)
 
 
 def cluster_umis_all_regions(regions, ends, edit_distance_threshold, samplename,  bamfilename, output_path, 
                              include_singletons, fasta, bedregions, num_cpus, 
-                             indel_frequency_cutoff, consensus_frequency_cutoff):
+                             indel_frequency_cutoff, consensus_frequency_cutoff,region_from_tag=False,starts=[]):
     '''Function for running UMI cluestering and error correction using num_cpus threads,
         i.e. one region on each thread.'''
     argvec = []
@@ -330,13 +336,19 @@ def cluster_umis_all_regions(regions, ends, edit_distance_threshold, samplename,
             else:
                 annotations = []
             
+            if region_from_tag:
+                i=pos
+                posx=int(starts[contig][pos])
+            else:
+                posx=int(pos)
             tmpfilename = '{}/tmp_{}.bam'.format(output_path, i)
-            argvec.append((regions[contig][pos], samplename, tmpfilename, int(i), contig, int(pos), 
+            argvec.append((regions[contig][pos], samplename, tmpfilename, i, contig, posx, 
                            int(ends[contig][pos]), int(edit_distance_threshold), bamfilename,
                            include_singletons, annotations, fasta, indel_frequency_cutoff,
                            consensus_frequency_cutoff))
             bamfilelist.append('{}/tmp_{}.bam'.format(output_path, i))
-            i += 1
+            if not region_from_tag:
+                i += 1
 
     p = Pool(int(num_cpus))
     
@@ -352,10 +364,15 @@ def cluster_umis_on_position(bamfilename, position_threshold, group_method, bedf
     position_threshold=int(position_threshold)
     if group_method == 'fromBed':
         regions, ends = read_bam_from_bed(bamfilename, bedfilename, position_threshold)
+    elif group_method == 'fromTag':
+        regions, starts, ends = read_bam_from_tag(bamfilename)
     else:
         regions, ends = readBam(bamfilename, position_threshold)
     
-    return(regions, ends)
+    if group_method == 'fromTag':
+        return(regions,ends,starts)
+    else:
+        return(regions, ends)
 
 
 def run_umi_errorcorrect(args):
@@ -364,13 +381,19 @@ def run_umi_errorcorrect(args):
     args.output_path = check_output_directory(args.output_path)
     if args.regions_from_bed:
         group_method = 'fromBed'
+    elif args.regions_from_tag:
+        group_method = 'fromTag'
     else:
         group_method = 'automatic'
 
     logging.info('Group by position method: {}'.format(group_method))
     if not args.sample_name:
         args.sample_name = get_sample_name(args.bam_file)
-    regions, ends = cluster_umis_on_position(args.bam_file, args.position_threshold, 
+    if group_method == 'fromTag':
+        regions, ends, starts = cluster_umis_on_position(args.bam_file, args.position_threshold,
+                                             group_method, args.bed_file)
+    else:
+        regions, ends = cluster_umis_on_position(args.bam_file, args.position_threshold, 
                                              group_method, args.bed_file)
     nregions = 0
     for chrx in regions:
@@ -392,14 +415,21 @@ def run_umi_errorcorrect(args):
             bedregions = merge_regions(bedregions, 0)
     else:
         bedregions = []
-    bamfilelist = cluster_umis_all_regions(regions, ends, edit_distance_threshold, 
+    if group_method=='fromTag':
+        bamfilelist = cluster_umis_all_regions(regions, ends, edit_distance_threshold,
+                                           args.sample_name, args.bam_file, args.output_path,
+                                           args.include_singletons, fasta, bedregions,
+                                           num_cpus, args.indel_frequency_threshold,
+                                           args.consensus_frequency_threshold,args.regions_from_tag,starts)
+    else:
+        bamfilelist = cluster_umis_all_regions(regions, ends, edit_distance_threshold, 
                                            args.sample_name, args.bam_file, args.output_path, 
                                            args.include_singletons, fasta, bedregions, 
                                            num_cpus, args.indel_frequency_threshold, 
                                            args.consensus_frequency_threshold)
     merge_bams(args.output_path, bamfilelist, args.sample_name)
     index_bam_file(args.output_path + '/' + args.sample_name + '_consensus_reads.bam',
-              args.num_threads)
+              num_cpus)
     consfilelist = [x.rstrip('.bam') + '.cons' for x in bamfilelist]
     merge_cons(args.output_path, consfilelist, args.sample_name)
     cons_file = args.output_path + '/' + args.sample_name + '.cons'
@@ -410,7 +440,7 @@ def run_umi_errorcorrect(args):
     merge_stat(args.output_path, statfilelist, args.sample_name)
     duppos = check_duplicate_positions(cons_file)
     if any(duppos):
-        merge_duplicate_positions_all_chromosomes(duppos,cons_file,args.num_threads)
+        merge_duplicate_positions_all_chromosomes(duppos,cons_file,num_cpus)
     logging.info("Consensus generation complete, output written to {}, {}".format(args.output_path + 
                  '/' + args.sample_name + '_consensus_reads.bam',
                  args.output_path + '/' + args.sample_name + '.cons'))
