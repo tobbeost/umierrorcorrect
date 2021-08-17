@@ -395,6 +395,7 @@ def run_umi_errorcorrect(args):
     else:
         regions, ends = cluster_umis_on_position(args.bam_file, args.position_threshold, 
                                              group_method, args.bed_file)
+    print(regions)
     nregions = 0
     for chrx in regions:
         nregions += len(regions[chrx])
