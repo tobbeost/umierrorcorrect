@@ -12,6 +12,8 @@ from multiprocessing import Pool, cpu_count
 import subprocess
 import argparse
 import logging
+import pickle
+from itertools import islice
 
 def parseArgs():
     '''Function for parsing arguments'''
@@ -320,6 +322,21 @@ def index_bam_file(filename, num_threads=1):
     os.rename(filename + '.sorted', filename)
     pysam.index(filename, catch_stdout=False)
 
+def split_into_chunks(dictname):
+    n = 0
+    i = 0
+    newdicts = []
+    b=list(dictname.values())
+    a=iter(dictname.items())
+    for count in b:
+        n += count
+        i += 1
+        if n > 100000:
+            newdicts.append(dict(islice(a,i))) #add (more than) 100000 raw reads to newdicts (from 0 to index i)
+            n = 0
+            i = 0
+    newdicts.append(dict(islice(a,i))) #add remaining entries
+    return(newdicts)
 
 def cluster_umis_all_regions(regions, ends, edit_distance_threshold, samplename,  bamfilename, output_path, 
                              include_singletons, fasta, bedregions, num_cpus, 
@@ -342,13 +359,26 @@ def cluster_umis_all_regions(regions, ends, edit_distance_threshold, samplename,
             else:
                 posx=int(pos)
             tmpfilename = '{}/tmp_{}.bam'.format(output_path, i)
-            argvec.append((regions[contig][pos], samplename, tmpfilename, i, contig, posx, 
-                           int(ends[contig][pos]), int(edit_distance_threshold), bamfilename,
-                           include_singletons, annotations, fasta, indel_frequency_cutoff,
-                           consensus_frequency_cutoff))
-            bamfilelist.append('{}/tmp_{}.bam'.format(output_path, i))
-            if not region_from_tag:
-                i += 1
+            numreads = sum(regions[contig][pos].values())
+            if numreads > 100000: #split in chunks
+                newdicts=split_into_chunks(regions[contig][pos])
+                for x in newdicts:
+                    tmpfilename = '{}/tmp_{}.bam'.format(output_path, i)
+                    argvec.append((x, samplename, tmpfilename, i, contig, posx,
+                                    int(ends[contig][pos]), int(edit_distance_threshold), bamfilename,
+                                    include_singletons, annotations, fasta, indel_frequency_cutoff,
+                                    consensus_frequency_cutoff))
+                    bamfilelist.append('{}/tmp_{}.bam'.format(output_path, i))
+                    if not region_from_tag:
+                        i += 1
+            else:
+                argvec.append((regions[contig][pos], samplename, tmpfilename, i, contig, posx, 
+                                int(ends[contig][pos]), int(edit_distance_threshold), bamfilename,
+                                include_singletons, annotations, fasta, indel_frequency_cutoff,
+                                consensus_frequency_cutoff))
+                bamfilelist.append('{}/tmp_{}.bam'.format(output_path, i))
+                if not region_from_tag:
+                    i += 1
 
     p = Pool(int(num_cpus))
     
@@ -357,7 +387,7 @@ def cluster_umis_all_regions(regions, ends, edit_distance_threshold, samplename,
 
 
 def cluster_umis_on_position(bamfilename, position_threshold, group_method, bedfilename=None):
-    '''Function for cluster umis on position'''
+    '''Function for 0cluster umis on position'''
     #position_threshold = 20
     # group_method='fromBed'
     # group_method='automatic'
@@ -395,10 +425,15 @@ def run_umi_errorcorrect(args):
     else:
         regions, ends = cluster_umis_on_position(args.bam_file, args.position_threshold, 
                                              group_method, args.bed_file)
-    print(regions)
+    
+    #print(regions)
     nregions = 0
     for chrx in regions:
         nregions += len(regions[chrx])
+        for pos in regions[chrx]:
+            numreads=sum(regions[chrx][pos].values())
+            if numreads > 100000:
+                print(numreads)
     logging.info("Number of regions, {}".format(nregions))
     
     edit_distance_threshold = args.edit_distance_threshold

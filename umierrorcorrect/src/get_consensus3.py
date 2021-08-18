@@ -381,15 +381,16 @@ def get_cons_dict(bamfilename, umis, contig, start, end, include_singletons):
             barcode = read.qname.split(':')[-1]
             pos = read.pos
             if pos >= start and pos <= end:
-                cluster = umis[barcode].centroid
-                cluster_size = umis[barcode].count
-                if cluster_size > 1:
-                    if cluster not in position_matrix:
-                        position_matrix[cluster] = []
-                    position_matrix[cluster].append(read)
-                elif include_singletons:
-                    if cluster not in singleton_matrix:
-                        singleton_matrix[cluster] = read
+                if barcode in umis:
+                    cluster = umis[barcode].centroid
+                    cluster_size = umis[barcode].count
+                    if cluster_size > 1:
+                        if cluster not in position_matrix:
+                            position_matrix[cluster] = []
+                        position_matrix[cluster].append(read)
+                    elif include_singletons:
+                        if cluster not in singleton_matrix:
+                            singleton_matrix[cluster] = read
     return(position_matrix, singleton_matrix)
 
 
