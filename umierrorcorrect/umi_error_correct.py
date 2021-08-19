@@ -315,6 +315,43 @@ def merge_stat(output_path,statfilelist, sample_name):
     for filename in statfilelist:
         os.remove(filename)
 
+def merge_duplicate_stat(output_path,samplename):
+    histfile=output_path + '/' + samplename + '.hist'
+    regions={}
+    with open(histfile) as f:
+        for line in f:
+            line=line.rstrip()
+            parts=line.split('\t')
+            idx=parts[0]
+            chrx=parts[1].split(':')[0]
+            if chrx not in regions:
+                regions[chrx]={}
+            pos=parts[1].split(':')[1].split('-')[0]
+            end=parts[1].split(':')[1].split('-')[1]
+            name=parts[2]
+            numcons=parts[3].split()[1]
+            numsing=parts[4].split()[1]
+            if pos not in regions[chrx]:
+                regions[chrx][pos]=(idx,int(pos),int(end),name,int(numcons),int(numsing))
+            else:
+                tmp=regions[chrx][pos]
+                if '-' in tmp[0]:
+                    newid=tmp[0].split('-')[0]+'-'+idx
+                else:
+                    newid=tmp[0]+'-'+idx
+                if int(end) > int(tmp[2]):
+                    newend=end
+                else:
+                    newend=tmp[2]
+                newnumcons=tmp[4] + int(numcons)
+                newnumsing=tmp[5] + int(numsing)
+                regions[chrx][pos]=(newid, tmp[1], newend, name, newnumcons, newnumsing)
+    with open(histfile+'2','w') as g:
+        for chrx in sorted(regions):
+            for pos in regions[chrx]:
+                tmp=regions[chrx][pos]
+                g.write('{}\t{}:{}-{}\t{}\tconsensus_reads: {}\tsingletons: {}\n'.format(tmp[0],str(chrx),tmp[1],tmp[2],tmp[3],tmp[4],tmp[5]))
+    os.rename(histfile+'2', histfile)
 
 def index_bam_file(filename, num_threads=1):
     '''Index the consensus reads bam file'''
@@ -323,6 +360,7 @@ def index_bam_file(filename, num_threads=1):
     pysam.index(filename, catch_stdout=False)
 
 def split_into_chunks(dictname):
+    ''' If one region contains more than 100000 raw reads, split in chunks of 100000.'''
     n = 0
     i = 0
     newdicts = []
