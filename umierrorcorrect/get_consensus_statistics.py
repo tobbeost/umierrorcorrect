@@ -27,29 +27,33 @@ def parseArgs():
 
 
 class region_cons_stat():
-    def __init__(self, regionid, pos, name, singletons):
+    def __init__(self, regionid, pos, name, singletons,fsizes):
         self.regionid = regionid
         self.pos = pos
         self.name = name
         self.singletons = singletons
+        self.hist = []
+        self.total_reads = {}
+        self.umis = {}
+        for fsize in fsizes:
+            self.total_reads[fsize] = 0
+            self.umis[fsize] = 0
+            self.total_reads[0] = 0
+            self.umis[0] = 0
+        self.fsizes=fsizes
 
     def add_histogram(self, hist, fsizes):
-        total_reads = {}
-        umis = {}
-        total_reads[0] = sum(hist) + self.singletons
-        umis[0] = sum(hist) + self.singletons
+        self.total_reads[0] += sum(hist) + self.singletons
+        self.umis[0] += sum(hist) + self.singletons
         for fsize in fsizes:
             tmp=[x for x in hist if x >=fsize]
             if fsize == 1:
-                total_reads[fsize] = sum(tmp) + self.singletons
-                umis[fsize] = len(tmp) + self.singletons
+                self.total_reads[fsize] += sum(tmp) + self.singletons
+                self.umis[fsize] += len(tmp) + self.singletons
             else:
-                total_reads[fsize] = sum(tmp)
-                umis[fsize] = len(tmp)
-        self.hist = hist
-        self.total_reads = total_reads
-        self.umis = umis
-        self.fsizes = fsizes
+                self.total_reads[fsize] += sum(tmp)
+                self.umis[fsize] += len(tmp)
+        self.hist.extend(hist)
 
     def write_stats(self):
         lines=[]
@@ -59,8 +63,12 @@ class region_cons_stat():
                         '0', '1.0', str(r0), str(u0)])
         lines.append(line)
         for fsize in self.fsizes:
+            if r0==0:
+                fraction=0
+            else:
+                fraction=self.total_reads[fsize]/r0
             line = '\t'.join([str(self.regionid), self.pos, self.name,
-                              str(fsize), str(1.0*(self.total_reads[fsize]/r0)), 
+                              str(fsize), str(1.0*fraction), 
                               str(self.total_reads[fsize]), str(self.umis[fsize])])
             lines.append(line)
         return('\n'.join(lines))
@@ -72,7 +80,7 @@ def get_stat(consensus_filename, stat_filename):
             line=line.rstrip()
             regionid, pos, name, cons, singles, *rest =line.split('\t')
             singles=int(singles.split(": ")[-1])
-            regionid=int(regionid)
+            regionid=str(regionid)
             regions.append((regionid,pos,singles,name))
             
     #print(regions)
@@ -83,7 +91,7 @@ def get_stat(consensus_filename, stat_filename):
             idx=read.qname
             if idx.startswith('Consensus_read'):
                 parts=idx.split('_')
-                regionid=int(parts[2])
+                regionid=str(parts[2])
                 if parts[4].startswith('Count') or parts[4]=='a':
                     count=int(idx.split('=')[-1])
                     if regionid not in hist:
@@ -93,10 +101,18 @@ def get_stat(consensus_filename, stat_filename):
     fsizes=[1,2,3,4,5,7,10,20,30]
     regionstats=[]
     for regionid,pos,singletons,name in regions:
-        if regionid in hist:
-            stat=region_cons_stat(regionid, pos, name, singletons)
-            stat.add_histogram(hist[regionid], fsizes)
+        if '-' in regionid:
+            a, b, *rest = regionid.split('-')
+            stat=region_cons_stat(regionid, pos, name, singletons,fsizes)
+            for i in range(int(a),int(b)+1):
+                if str(i) in hist:
+                    stat.add_histogram(hist[str(i)], fsizes)
             #print(stat.write_stats())
+            regionstats.append(stat)
+        else:
+            stat=region_cons_stat(regionid, pos, name, singletons, fsizes)
+            if regionid in hist:
+                stat.add_histogram(hist[regionid], fsizes)
             regionstats.append(stat)
     return(regionstats)
 
@@ -129,9 +145,7 @@ def calculate_target_coverage(stats,fsizes):
 
 
 def get_overall_statistics(hist,fsizes):
-    histall = region_cons_stat('All','all_regions','',0)
-    histall.total_reads = {}
-    histall.umis = {}
+    histall = region_cons_stat('All','all_regions','',0,fsizes)
     fsizesnew=fsizes.copy()
     histall.fsizes = fsizes
     fsizesnew.insert(0,0)

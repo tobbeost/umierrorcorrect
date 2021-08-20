@@ -318,6 +318,7 @@ def merge_stat(output_path,statfilelist, sample_name):
 def merge_duplicate_stat(output_path,samplename):
     histfile=output_path + '/' + samplename + '.hist'
     regions={}
+    #histfile
     with open(histfile) as f:
         for line in f:
             line=line.rstrip()
@@ -347,11 +348,12 @@ def merge_duplicate_stat(output_path,samplename):
                 newnumsing=tmp[5] + int(numsing)
                 regions[chrx][pos]=(newid, tmp[1], newend, name, newnumcons, newnumsing)
     with open(histfile+'2','w') as g:
-        for chrx in sorted(regions):
+        for chrx in sorted(regions,key=int):
             for pos in regions[chrx]:
                 tmp=regions[chrx][pos]
                 g.write('{}\t{}:{}-{}\t{}\tconsensus_reads: {}\tsingletons: {}\n'.format(tmp[0],str(chrx),tmp[1],tmp[2],tmp[3],tmp[4],tmp[5]))
     os.rename(histfile+'2', histfile)
+
 
 def index_bam_file(filename, num_threads=1):
     '''Index the consensus reads bam file'''
@@ -468,10 +470,6 @@ def run_umi_errorcorrect(args):
     nregions = 0
     for chrx in regions:
         nregions += len(regions[chrx])
-        for pos in regions[chrx]:
-            numreads=sum(regions[chrx][pos].values())
-            if numreads > 100000:
-                print(numreads)
     logging.info("Number of regions, {}".format(nregions))
     
     edit_distance_threshold = args.edit_distance_threshold
@@ -515,6 +513,7 @@ def run_umi_errorcorrect(args):
     duppos = check_duplicate_positions(cons_file)
     if any(duppos):
         merge_duplicate_positions_all_chromosomes(duppos,cons_file,num_cpus)
+    merge_duplicate_stat(args.output_path,args.sample_name)
     logging.info("Consensus generation complete, output written to {}, {}".format(args.output_path + 
                  '/' + args.sample_name + '_consensus_reads.bam',
                  args.output_path + '/' + args.sample_name + '.cons'))
