@@ -411,6 +411,8 @@ def cluster_umis_all_regions(regions, ends, edit_distance_threshold, samplename,
                     bamfilelist.append('{}/tmp_{}.bam'.format(output_path, i))
                     if not region_from_tag:
                         i += 1
+                    else:
+                        i
             else:
                 argvec.append((regions[contig][pos], samplename, tmpfilename, i, contig, posx, 
                                 int(ends[contig][pos]), int(edit_distance_threshold), bamfilename,
