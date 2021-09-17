@@ -4,6 +4,7 @@ import sys
 import argparse
 #import matplotlib.pyplot as plt
 import logging
+import glob
 from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, merge_regions, get_annotation
 from umierrorcorrect.version import __version__
 
@@ -118,7 +119,6 @@ def get_stat(consensus_filename, stat_filename):
             for i in range(int(a),int(b)+1):
                 if not from_tag:
                     if str(i) in hist:
-                        print(i)
                         stat.add_histogram(hist[str(i)], fsizes)
                 else:
                     if name+'_'+str(i) in hist:
@@ -207,9 +207,18 @@ def get_percent_mapped_reads(num_fastq_reads, bamfile):
 
 def run_get_consensus_statistics(output_path, consensus_filename, stat_filename, samplename=None):
     logging.info('Getting consensus statistics')
+    if not consensus_filename:
+        consensus_filename=glob.glob(output_path + '/*_consensus_reads.bam')[0]
+    if not samplename:
+        samplename = consensus_filename.split('/')[-1].replace('_consensus_reads.bam','')
+    if not stat_filename:
+        stat_filename=output_path+'/'+samplename+'.hist'
     hist=get_stat(consensus_filename,stat_filename)
     fsizes=[1,2,3,4,5,7,10,20,30]
     histall = get_overall_statistics(hist,fsizes)
+    if not consensus_filename:
+        consensus_filename=glob.glob(output_path + '/*_consensus_reads.bam')
+        print(consensus_filename)
     if not samplename:
         samplename = stat_filename.split('/')[-1][:-5]
     outfilename = output_path + '/' + samplename + '_summary_statistics.txt'
