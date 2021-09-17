@@ -386,6 +386,7 @@ def cluster_umis_all_regions(regions, ends, edit_distance_threshold, samplename,
     argvec = []
     bamfilelist = []
     i = 0
+    j = 0
     for contig in regions:
         for pos in regions[contig]:
             if contig in bedregions:
@@ -396,6 +397,7 @@ def cluster_umis_all_regions(regions, ends, edit_distance_threshold, samplename,
             if region_from_tag:
                 i=pos
                 posx=int(starts[contig][pos])
+                j=0
             else:
                 posx=int(pos)
             tmpfilename = '{}/tmp_{}.bam'.format(output_path, i)
@@ -412,7 +414,8 @@ def cluster_umis_all_regions(regions, ends, edit_distance_threshold, samplename,
                     if not region_from_tag:
                         i += 1
                     else:
-                        i
+                        i=i+'_'+str(j)
+                        j += 1
             else:
                 argvec.append((regions[contig][pos], samplename, tmpfilename, i, contig, posx, 
                                 int(ends[contig][pos]), int(edit_distance_threshold), bamfilename,

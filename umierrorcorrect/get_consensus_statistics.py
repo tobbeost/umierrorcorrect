@@ -91,8 +91,8 @@ def get_stat(consensus_filename, stat_filename):
             idx=read.qname
             if idx.startswith('Consensus_read'):
                 parts=idx.split('_')
-                regionid=str(parts[2])
-                if parts[4].startswith('Count') or parts[4]=='a':
+                regionid='_'.join(parts[2:-2])
+                if parts[-1].startswith('Count') or parts[-1]=='a':
                     count=int(idx.split('=')[-1])
                     if regionid not in hist:
                         hist[regionid]=[]
@@ -103,10 +103,26 @@ def get_stat(consensus_filename, stat_filename):
     for regionid,pos,singletons,name in regions:
         if '-' in regionid:
             a, b, *rest = regionid.split('-')
+            from_tag=False
+            try:
+                int(b)
+            except ValueError as e: #not an int
+                if '_' in b:
+                    name=a
+                    a=0
+                    b=int(b.split('_')[-1])
+                    from_tag=True
+                    
+
             stat=region_cons_stat(regionid, pos, name, singletons,fsizes)
             for i in range(int(a),int(b)+1):
-                if str(i) in hist:
-                    stat.add_histogram(hist[str(i)], fsizes)
+                if not from_tag:
+                    if str(i) in hist:
+                        print(i)
+                        stat.add_histogram(hist[str(i)], fsizes)
+                else:
+                    if name+'_'+str(i) in hist:
+                        stat.add_histogram(hist[name+'_'+str(i)], fsizes)
             #print(stat.write_stats())
             regionstats.append(stat)
         else:

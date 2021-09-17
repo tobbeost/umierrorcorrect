@@ -166,6 +166,7 @@ def read_bam_from_tag(infile):
                 utag = r.get_tag('UG')
             except KeyError:
                 print('UG tag not present in BAM file')
+                utag = ''
             if utag not in regions[contig]:
                 regions[contig][utag] = Counter()
                 starts[contig][utag] = r.reference_start
