@@ -7,6 +7,7 @@ from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, mer
 from umierrorcorrect.version import __version__
 import sys
 import os
+import re
 import pysam
 from multiprocessing import Pool, cpu_count
 import subprocess
@@ -315,6 +316,12 @@ def merge_stat(output_path,statfilelist, sample_name):
     for filename in statfilelist:
         os.remove(filename)
 
+def chromosome_key(s):
+    if s.isdigit():
+        return(int(s))
+    else:
+        return([t.lower() for t in re.split('(\d+)', s)])
+
 def merge_duplicate_stat(output_path,samplename):
     histfile=output_path + '/' + samplename + '.hist'
     regions={}
@@ -348,7 +355,7 @@ def merge_duplicate_stat(output_path,samplename):
                 newnumsing=tmp[5] + int(numsing)
                 regions[chrx][pos]=(newid, tmp[1], newend, name, newnumcons, newnumsing)
     with open(histfile+'2','w') as g:
-        for chrx in sorted(regions,key=int):
+        for chrx in sorted(regions,key=chromosome_key):
             for pos in regions[chrx]:
                 tmp=regions[chrx][pos]
                 g.write('{}\t{}:{}-{}\t{}\tconsensus_reads: {}\tsingletons: {}\n'.format(tmp[0],str(chrx),tmp[1],tmp[2],tmp[3],tmp[4],tmp[5]))

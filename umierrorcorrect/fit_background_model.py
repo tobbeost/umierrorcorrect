@@ -75,12 +75,14 @@ def get_beta_parameters(data):
 
 def run_fit_bgmodel(args):
     spikepositions=[178952085,55599321,7577558,7577547,7577538,7577120]
-    nonbgpos=[]    
     if args.nonbgposfile:
+        nonbgpos=[]
         with open(args.nonbgposfile) as f:
             for line in f:
                 line=line.rstrip()
                 nonbgpos.append(line)
+    else:
+        nonbgpos=spikepositions
     if not args.cons_file:
         args.cons_file=glob.glob(args.output_path+'/*.cons')[0]
     args.fsize=int(args.fsize)
