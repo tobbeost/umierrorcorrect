@@ -2,7 +2,11 @@
 import pysam
 import sys
 import argparse
-#import matplotlib.pyplot as plt
+import numpy as np
+import random
+import copy
+from collections import Counter
+import matplotlib.pyplot as plt
 import logging
 import glob
 from umierrorcorrect.src.get_regions_from_bed import read_bed, sort_regions, merge_regions, get_annotation
@@ -132,6 +136,66 @@ def get_stat(consensus_filename, stat_filename):
             regionstats.append(stat)
     return(regionstats)
 
+def plot_downsampling(results_tot,fsize,plot_filename):
+    x=[]
+    y=[]
+    for r in results_tot[0]:
+        h=results_tot[0][r]
+        x.append(h.total_reads[int(fsize)])
+        y.append(h.umis[int(fsize)])
+    plt.plot(x,y,'o-')
+    plt.xlabel('Depth')
+    plt.ylabel('Number of UMI families')
+    plt.title('Downsampling plot')
+    plt.box(False)
+    plt.xlim(0,max(x)+40000)
+    plt.ylim(0,max(y)+1000)
+    plt.savefig(plot_filename)
+
+
+def save_downsampled_table(all_results,tot_results,out_filename):
+    with open(out_filename,'w') as g:
+        for r in tot_results[0]:
+            text=tot_results[0][r].write_stats()
+            lines=text.split('\n')
+            for line in lines:
+                g.write('downsampled'+str(r)+'\t'+line+'\n')
+        for region in all_results:
+            for r in region:
+                text=region[r].write_stats()
+                lines=text.split('\n')
+                for line in lines:
+                    g.write('downsampled'+str(r)+'\t'+line+'\n')
+
+
+def downsample_reads_per_region(hist, fraction, fsizes, onlyNamed=True):
+    all_results=[]
+    downsample_rates=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    for h in hist:
+        run_analysis=True
+        if onlyNamed:
+            if h.name=='':
+                run_analysis=False
+        if run_analysis:
+            num_families=len(h.hist)
+            tmpnames=np.array(range(0,num_families))
+            singnames=list(range(num_families,num_families+h.singletons))
+            times=np.array(h.hist)
+            reads=np.repeat(tmpnames,times,axis=0) #expand to one entry per read
+            reads=list(reads)+singnames
+            results={}
+            for r in downsample_rates:
+                ds_reads=random.sample(list(reads),round(r*len(reads))) #downsample
+                new_hist=Counter(ds_reads).values() #collapse to one entry per UMI family
+                new_hist=sorted(new_hist, reverse=True) #sort
+                new_singletons=list(new_hist).count(1) #count singletons in new
+                new_stat=region_cons_stat(h.regionid, h.pos, h.name, new_singletons,h.fsizes)
+                new_stat.add_histogram(new_hist, fsizes)
+                results[r]=new_stat
+            all_results.append(results)
+    return(all_results)
+                
+
 #def write_report():
 #    from markdown2 import Markdown
 #    md=Markdown()
@@ -157,7 +221,7 @@ def calculate_target_coverage(stats,fsizes):
         else:
             lines.append('{}\t{}\t{}\t{}'.format(fsize, reads_target[fsize], reads_all[fsize], 0))
         
-    return('\n'.join(lines))
+    return('\,n'.join(lines))
 
 
 def get_overall_statistics(hist,fsizes):
