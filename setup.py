@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#
+/usr/bin/env python3
 from setuptools import setup
 from setuptools import find_packages
 
@@ -29,5 +30,6 @@ setup(name='umierrorcorrect',
                 'umierrorcorrect/get_consensus_statistics.py',
                 'umierrorcorrect/call_variants6.py',
                 'umierrorcorrect/filter_bam.py',
-                'umierrorcorrect/filter_cons.py'],
+                'umierrorcorrect/filter_cons.py'
+                'umierrorcorrect/downsampling_plots.py'],
       zip_safe=False)
