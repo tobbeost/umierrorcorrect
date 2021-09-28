@@ -221,7 +221,7 @@ def calculate_target_coverage(stats,fsizes):
         else:
             lines.append('{}\t{}\t{}\t{}'.format(fsize, reads_target[fsize], reads_all[fsize], 0))
         
-    return('\,n'.join(lines))
+    return('\n'.join(lines))
 
 
 def get_overall_statistics(hist,fsizes):

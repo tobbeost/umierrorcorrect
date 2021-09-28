@@ -13,7 +13,7 @@ def parseArgs():
 
 
 def filter_cons(filename,raw_depth_cutoff=150,fsizes='0,1,2,3,4,5,7,10,20,30', writeraw=False):
-    outfilename=filename[:-5]+'_filtered.cons'
+    outfilename=filename.replace('_cons.tsv','_filtered_cons.tsv')
     fs=fsizes.split(',')
     with open(filename) as f, open(outfilename,'w') as g:
         header=f.readline()

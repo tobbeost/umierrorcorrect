@@ -173,7 +173,7 @@ def merge_bams(output_path, bamfilelist, sample_name):
 
 def merge_cons(output_path, consfilelist, sample_name):
     '''Merge all cons files in consfilelist and remove temporary files.'''
-    with open(output_path + '/' + sample_name + '.cons', 'w') as g:
+    with open(output_path + '/' + sample_name + '_cons.tsv', 'w') as g:
         g.write('Sample Name\tContig\tPosition\tName\tReference\tA\tC\tG\tT\tI\tD\tN\tCoverage\tConsensus group size\tMax Non-ref Allele Count\tMax Non-ref Allele Frequency\tMax Non-ref Allele\n')
         for filename in consfilelist:
             with open(filename) as f:
@@ -516,7 +516,7 @@ def run_umi_errorcorrect(args):
               num_cpus)
     consfilelist = [x.rstrip('.bam') + '.cons' for x in bamfilelist]
     merge_cons(args.output_path, consfilelist, args.sample_name)
-    cons_file = args.output_path + '/' + args.sample_name + '.cons'
+    cons_file = args.output_path + '/' + args.sample_name + '_cons.tsv'
     if args.remove_large_files:
         os.remove(args.output_path+'/' +args.bam_file)
 
@@ -528,7 +528,7 @@ def run_umi_errorcorrect(args):
     merge_duplicate_stat(args.output_path,args.sample_name)
     logging.info("Consensus generation complete, output written to {}, {}".format(args.output_path + 
                  '/' + args.sample_name + '_consensus_reads.bam',
-                 args.output_path + '/' + args.sample_name + '.cons'))
+                 args.output_path + '/' + args.sample_name + '_cons.tsv'))
 
 def main(args):
     run_umi_errorcorrect(args)

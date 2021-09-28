@@ -84,7 +84,7 @@ def run_fit_bgmodel(args):
     else:
         nonbgpos=spikepositions
     if not args.cons_file:
-        args.cons_file=glob.glob(args.output_path+'/*.cons')[0]
+        args.cons_file=glob.glob(args.output_path+'/*cons.tsv')[0]
     args.fsize=int(args.fsize)
     f1,n1,a1,pos,data=parse_cons_file(args.cons_file,args.fsize)
     f1 = np.array(f1)

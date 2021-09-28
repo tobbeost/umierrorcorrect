@@ -115,13 +115,13 @@ def plot_histogram(hist,plot_filename):
 def get_sample_name(cons_name):
     '''Get the sample name as the basename of the input files.'''
     sample_name=cons_name.split('/')[-1]
-    sample_name = sample_name.replace('.cons','')
+    sample_name = sample_name.replace('_cons.tsv','')
     return(sample_name)
 
 def run_call_variants(args):
     spikepositions=[178952085,55599321,7577558,7577547,7577538,7577120]
     if not args.cons_file:
-        args.cons_file=glob.glob(args.output_path+'/*.cons')[0]
+        args.cons_file=glob.glob(args.output_path+'/*cons.tsv')[0]
     if not args.sample_name:
         args.sample_name=get_sample_name(args.cons_file)
     f1,n1,a1,data=parse_cons_file(args.cons_file,args.fsize)
@@ -156,7 +156,7 @@ def run_call_variants(args):
     else:
         rout=data[a1 >= float(args.count_cutoff)]
         Qsig=Q[a1 >= float(args.count_cutoff)]
-    outfilename=args.output_path+'/'+args.sample_name+'_2.vcf'
+    outfilename=args.output_path+'/'+args.sample_name+'.vcf'
     write_vcf(outfilename,rout,Qsig,args.reference_file)
 
 def main(filename,fsize,cutoff):
@@ -174,7 +174,7 @@ def main(filename,fsize,cutoff):
     data=np.array(data)
     rout=data[Q>=float(args.qvalue_threshold)]
     Qsig=Q[Q>=float(args.qvalue_threshold)]
-    outfilename=filename.rstrip('.cons')+'.vcf'
+    outfilename=filename.rstrip('_cons.tsv')+'.vcf'
     write_vcf(outfilename,rout,Qsig,'reference')
     for r,q in zip(rout,Qsig):
         print(r+'\t'+str(q))
