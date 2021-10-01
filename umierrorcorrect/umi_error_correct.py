@@ -52,6 +52,8 @@ def parseArgs():
                         help="Edit distance threshold for UMI clustering, [default = %(default)s]", default=1)
     parser.add_argument('-p', '--position_threshold', dest='position_threshold', 
                         help='Position threshold for grouping by position [default = %(default)s]', default=20)
+    parser.add_argument('--split', dest='split_to_chunks',help='Split targets with high coverage into chunks and process separately (experimental)', 
+                        action='store_true')
     parser.add_argument('-cons_freq', '--consensus_frequency_threshold', dest='consensus_frequency_threshold', 
                         help='Minimum percent of the majority base at a position for consensus to be called. \
                               [default = %(default)s]', default=60.0)
@@ -368,26 +370,45 @@ def index_bam_file(filename, num_threads=1):
     os.rename(filename + '.sorted', filename)
     pysam.index(filename, catch_stdout=False)
 
-def split_into_chunks(dictname):
-    ''' If one region contains more than 100000 raw reads, split in chunks of 100000.'''
+def split_into_chunks(umi_dict,clusters):
+    ''' If one region contains more than 100000 raw reads, split in chunks of 100000.
+        keep all barcodes in same cluster in the same chunk.
+    '''
     n = 0
     i = 0
     newdicts = []
-    b=list(dictname.values())
-    a=iter(dictname.items())
-    for count in b:
-        n += count
-        i += 1
+    newdict = {}
+    for c in clusters:
+        for j in c:
+            count=umi_dict[j]
+            newdict[j]=count
+            n+=count
         if n > 100000:
-            newdicts.append(dict(islice(a,i))) #add (more than) 100000 raw reads to newdicts (from 0 to index i)
-            n = 0
-            i = 0
-    newdicts.append(dict(islice(a,i))) #add remaining entries
+            newdicts.append(newdict)
+            newdict={}
+            n=0
+    newdicts.append(newdict) #add remaining entries
     return(newdicts)
+    
+    
+    #n = 0
+    #i = 0
+    #newdicts = []
+    #b=list(dictname.values())
+    #a=iter(dictname.items())
+    #for count in b:
+    #    n += count
+    #    i += 1
+    #    if n > 100000:
+    #        newdicts.append(dict(islice(a,i))) #add (more than) 100000 raw reads to newdicts (from 0 to index i)
+    #        n = 0
+    #        i = 0
+    #newdicts.append(dict(islice(a,i))) #add remaining entries
+    #return(newdicts)
 
 def cluster_umis_all_regions(regions, ends, edit_distance_threshold, samplename,  bamfilename, output_path, 
                              include_singletons, fasta, bedregions, num_cpus, 
-                             indel_frequency_cutoff, consensus_frequency_cutoff,region_from_tag=False,starts=[]):
+                             indel_frequency_cutoff, consensus_frequency_cutoff, split_to_chunks, region_from_tag=False,starts=[]):
     '''Function for running UMI cluestering and error correction using num_cpus threads,
         i.e. one region on each thread.'''
     argvec = []
@@ -409,8 +430,11 @@ def cluster_umis_all_regions(regions, ends, edit_distance_threshold, samplename,
                 posx=int(pos)
             tmpfilename = '{}/tmp_{}.bam'.format(output_path, i)
             numreads = sum(regions[contig][pos].values())
-            if numreads > 100000: #split in chunks
-                newdicts=split_into_chunks(regions[contig][pos])
+            if numreads > 100000 and split_to_chunks: #split in chunks
+                umi_dict=regions[contig][pos]
+                adj_matrix = cluster_barcodes(umi_dict, edit_distance_threshold)
+                clusters = get_connected_components(umi_dict, adj_matrix)
+                newdicts=split_into_chunks(umi_dict,clusters)
                 for x in newdicts:
                     tmpfilename = '{}/tmp_{}.bam'.format(output_path, i)
                     argvec.append((x, samplename, tmpfilename, i, contig, posx,
@@ -504,13 +528,15 @@ def run_umi_errorcorrect(args):
                                            args.sample_name, args.bam_file, args.output_path,
                                            args.include_singletons, fasta, bedregions,
                                            num_cpus, args.indel_frequency_threshold,
-                                           args.consensus_frequency_threshold,args.regions_from_tag,starts)
+                                           args.consensus_frequency_threshold,
+                                           args.split_to_chunks, args.regions_from_tag, starts)
     else:
         bamfilelist = cluster_umis_all_regions(regions, ends, edit_distance_threshold, 
                                            args.sample_name, args.bam_file, args.output_path, 
                                            args.include_singletons, fasta, bedregions, 
                                            num_cpus, args.indel_frequency_threshold, 
-                                           args.consensus_frequency_threshold)
+                                           args.consensus_frequency_threshold,
+                                           args.split_to_chunks)
     merge_bams(args.output_path, bamfilelist, args.sample_name)
     index_bam_file(args.output_path + '/' + args.sample_name + '_consensus_reads.bam',
               num_cpus)

@@ -71,6 +71,9 @@ def parseArgs():
     group3.add_argument('-p', '--position_threshold', dest='position_threshold', 
                         help='Position threshold for grouping by position [default = %(default)s]',
                         default=10)
+    group3.add_argument('--split', dest='split_to_chunks',
+                        help='Split targets with high coverage into chunks and process separately (experimental)',
+                        action='store_true')
     
     group4 = parser.add_argument_group('Consensus options')
     group4.add_argument('-cons_freq', '--consensus_frequency_threshold', dest='consensus_frequency_threshold',

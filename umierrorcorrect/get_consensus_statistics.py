@@ -43,18 +43,20 @@ class region_cons_stat():
         for fsize in fsizes:
             self.total_reads[fsize] = 0
             self.umis[fsize] = 0
-            self.total_reads[0] = 0
-            self.umis[0] = 0
+            self.total_reads[0] = self.singletons
+            self.umis[0] = self.singletons
+        self.total_reads[1] = self.singletons
+        self.umis[1] = self.singletons
         self.fsizes=fsizes
 
     def add_histogram(self, hist, fsizes):
-        self.total_reads[0] += sum(hist) + self.singletons
-        self.umis[0] += sum(hist) + self.singletons
+        self.total_reads[0] += sum(hist) 
+        self.umis[0] += sum(hist) 
         for fsize in fsizes:
             tmp=[x for x in hist if x >=fsize]
             if fsize == 1:
-                self.total_reads[fsize] += sum(tmp) + self.singletons
-                self.umis[fsize] += len(tmp) + self.singletons
+                self.total_reads[fsize] += sum(tmp) 
+                self.umis[fsize] += len(tmp) 
             else:
                 self.total_reads[fsize] += sum(tmp)
                 self.umis[fsize] += len(tmp)
@@ -96,7 +98,8 @@ def get_stat(consensus_filename, stat_filename):
             idx=read.qname
             if idx.startswith('Consensus_read'):
                 parts=idx.split('_')
-                regionid='_'.join(parts[2:-2])
+                regionid=str(parts[2])
+                #regionid='_'.join(parts[2:-2])
                 if parts[-1].startswith('Count') or parts[-1]=='a':
                     count=int(idx.split('=')[-1])
                     if regionid not in hist:
