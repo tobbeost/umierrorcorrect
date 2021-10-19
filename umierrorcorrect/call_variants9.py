@@ -124,6 +124,7 @@ def run_call_variants(args):
         args.cons_file=glob.glob(args.output_path+'/*cons.tsv')[0]
     if not args.sample_name:
         args.sample_name=get_sample_name(args.cons_file)
+    args.fsize = int(args.fsize)
     f1,n1,a1,data=parse_cons_file(args.cons_file,args.fsize)
     f1 = np.array(f1)
     n1 = np.array(n1)

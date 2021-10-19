@@ -97,6 +97,7 @@ def parseArgs():
     group5.add_argument('-Q', '--qscore_cutoff', dest='qvalue_threshold',
                         help='Qscore threshold (Minimum variant significance score) for Variant calling, only if method=bbmodel [default = %(default)s]', 
                         default=20)
+    group5.add_argument('-params', '--params_file', dest='params_file', help='Params file')
 
     group6 = parser.add_argument_group('Running parameters')
     group6.add_argument('-tmpdir', '--tmp_dir', dest='tmpdir',
@@ -130,7 +131,7 @@ def main(args):
     stat_filename = args.output_path + '/' + args.sample_name + '.hist'
     run_get_consensus_statistics(args.output_path, cons_bam, stat_filename, args.sample_name)
     args.cons_file=None
-    args.params_file=None
+    #args.params_file=None
     run_call_variants(args)
     logging.info("Finished UMI Error Correct")
 
