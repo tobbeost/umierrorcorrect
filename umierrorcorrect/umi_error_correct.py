@@ -316,13 +316,9 @@ def merge_stat(output_path,statfilelist, sample_name):
     for filename in statfilelist:
         os.remove(filename)
 
-def chromosome_key(s):
-    if s.isdigit():
-        return(int(s))
-    else:
-        return([t.lower() for t in re.split('(\d+)', s)])
-
 def merge_duplicate_stat(output_path,samplename):
+    convert = lambda text: int(text) if text.isdigit() else text.lower()
+    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
     histfile=output_path + '/' + samplename + '.hist'
     regions={}
     #histfile
@@ -355,7 +351,7 @@ def merge_duplicate_stat(output_path,samplename):
                 newnumsing=tmp[5] + int(numsing)
                 regions[chrx][pos]=(newid, tmp[1], newend, name, newnumcons, newnumsing)
     with open(histfile+'2','w') as g:
-        for chrx in sorted(regions,key=chromosome_key):
+        for chrx in sorted(regions,key=alphanum_key):
             for pos in regions[chrx]:
                 tmp=regions[chrx][pos]
                 g.write('{}\t{}:{}-{}\t{}\tconsensus_reads: {}\tsingletons: {}\n'.format(tmp[0],str(chrx),tmp[1],tmp[2],tmp[3],tmp[4],tmp[5]))
